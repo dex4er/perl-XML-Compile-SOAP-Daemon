@@ -442,8 +442,8 @@ matching the need for the fault.  Example:
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.05,
-built on December 13, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.06,
+built on December 22, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
 
 Other distributions in this suite:
 L<XML::Compile>,

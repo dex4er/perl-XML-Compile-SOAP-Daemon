@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               XML-Compile-SOAP-Daemon
-version:            2.05
+version:            2.06
 abstract:           Daemon handling XML-SOAP
 author:
     - Mark Overmeer
@@ -11,15 +11,15 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    Log::Report:          0.22
+    Log::Report:          0.9
     LWP:                  5.803
     Net::Server:          0.97
     Test::Deep:           0.095
     Test::More:           0.54
     Time::HiRes:          0
-    XML::Compile:         1.18
-    XML::Compile::Cache:  0.97
-    XML::Compile::SOAP:   2.18
+    XML::Compile:         1.2
+    XML::Compile::Cache:  0.98
+    XML::Compile::SOAP:   2.2
     XML::Compile::SOAP::WSA:  0.12
     XML::Compile::Tester:  0.05
 no_index:

@@ -1,5 +1,5 @@
-=== README for XML-Compile-SOAP-Daemon version 2.05
-=   Generated on Mon Dec 13 15:37:48 2010 by OODoc 1.06
+=== README for XML-Compile-SOAP-Daemon version 2.06
+=   Generated on Wed Dec 22 16:43:00 2010 by OODoc 1.06
 
 There are various ways to install this module:
 
@@ -9,16 +9,16 @@ There are various ways to install this module:
  (2) if you use Windows, have a look at http://ppm.activestate.com/
 
  (3) if you have downloaded this module manually (as root/administrator)
-       gzip -d XML-Compile-SOAP-Daemon-2.05.tar.gz
-       tar -xf XML-Compile-SOAP-Daemon-2.05.tar
-       cd XML-Compile-SOAP-Daemon-2.05
+       gzip -d XML-Compile-SOAP-Daemon-2.06.tar.gz
+       tar -xf XML-Compile-SOAP-Daemon-2.06.tar
+       cd XML-Compile-SOAP-Daemon-2.06
        perl Makefile.PL
        make          # optional
        make test     # optional
        make install
 
 For usage, see the included manual-pages or
-    http://search.cpan.org/dist/XML-Compile-SOAP-Daemon-2.05/
+    http://search.cpan.org/dist/XML-Compile-SOAP-Daemon-2.06/
 
 Please report problems to
     http://rt.cpan.org/Dist/Display.html?Queue=XML-Compile-SOAP-Daemon

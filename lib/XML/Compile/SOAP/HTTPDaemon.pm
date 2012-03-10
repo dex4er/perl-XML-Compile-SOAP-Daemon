@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::HTTPDaemon;
 use vars '$VERSION';
-$VERSION = '2.05';
+$VERSION = '2.06';
 
 use base 'XML::Compile::SOAP::Daemon';
 
@@ -179,7 +179,7 @@ sub actionFromHeader($)
 
       !defined $action            ? undef
     : $action =~ m/^\s*\"(.*?)\"/ ? $1
-    :                               '';
+    :                               $action;
 }
 
 

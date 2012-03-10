@@ -2,13 +2,15 @@ use ExtUtils::MakeMaker;
 
 use 5.008;
 
-my %prereq =
-  ( XML::Compile         => 1.18
-  , XML::Compile::SOAP   => 2.18
-  , XML::Compile::Tester => 0.05
-  , XML::Compile::Cache  => 0.97
+my $version = '2.06';
 
-  , Log::Report     => 0.22
+my %prereq =
+  ( XML::Compile         => 1.20
+  , XML::Compile::SOAP   => 2.20
+  , XML::Compile::Tester => 0.05
+  , XML::Compile::Cache  => 0.98
+
+  , Log::Report     => 0.90
   , LWP             => 5.803
   , Time::HiRes     => 0
   , Net::Server     => 0.97
@@ -26,7 +28,7 @@ unless($@)
 
 WriteMakefile
  ( NAME	 	=> 'XML::Compile::SOAP::Daemon'
- , VERSION	=> '2.05'
+ , VERSION	=> $version
  , PREREQ_PM    => \%prereq
  , AUTHOR       => 'Mark Overmeer'
  , ABSTRACT     => 'Daemon handling XML-SOAP'

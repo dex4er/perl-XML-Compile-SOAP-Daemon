@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '2.05';
+$VERSION = '2.06';
 
 our @ISA;   # filled-in at new().
 
@@ -174,6 +174,10 @@ sub run(@)
 {   my ($self, %args) = @_;
     delete $args{log_file};      # Net::Server should not mess with my preps
     $args{no_client_stdout} = 1; # it's a daemon, you know
+
+    notice __x"WSA module loaded, but not used"
+        if XML::Compile::SOAP::WSA->can('new') && !keys %{$self->{wsa_input}};
+
     $self->{wsa_input_rev}  = +{ reverse %{$self->{wsa_input}} };
     $self->SUPER::run(%args);
 }
@@ -228,8 +232,8 @@ sub process($)
 
     # Try to resolve operation via soapAction
     my $sa = $self->{sa_input_rev};
-    if(defined $soapaction && $soapaction =~ m/^\s*(["'])?(.+)\1\s*$/)
-    {   if(my $name = $sa->{$2})
+    if(defined $soapaction)
+    {   if(my $name = $sa->{$soapaction})
         {   my $handler = $handlers->{$name};
             local $info->{selected_by} = 'soap-action';
             my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info);
@@ -308,8 +312,10 @@ sub operationsFromWSDL($@)
         $self->addHandler($name, $op, $code);
 
         if($op->can('wsaAction'))
-        {   $wsa_input->{$name}  ||= $op->wsaAction('INPUT');
-            $wsa_output->{$name} ||= $op->wsaAction('OUTPUT');
+        {   my $in  = $op->wsaAction('INPUT');
+            $wsa_input->{$name}  = $in if defined $in;
+            my $out = $op->wsaAction('OUTPUT');
+            $wsa_output->{$name} = $out if defined $out;
         }
         $self->addSoapAction($name, $op->soapAction);
     }

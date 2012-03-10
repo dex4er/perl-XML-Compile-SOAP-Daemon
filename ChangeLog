@@ -1,6 +1,17 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 2.06: Wed Dec 22 16:42:04 CET 2010
+
+	Fixes:
+
+	- correct use of soapAction selector again [Kaare Rasmussen]
+
+	- silence warnings when ::WSA is loaded, but not in the WSDL.
+	  reported by [Patrick Powell]
+
+	- produce notice when WSA is loaded but not used.
+
 version 2.05: Mon Dec 13 15:37:11 CET 2010
 
 	Fixes:
