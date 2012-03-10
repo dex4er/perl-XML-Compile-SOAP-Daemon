@@ -1,6 +1,32 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 3.01: Mon Feb 13 10:30:20 CET 2012
+
+	Improvements:
+
+	- add new server type ::Daemon::AnyDaemon, with example
+
+	- implement error handling in ::CGI, lack discovered by [Bill Moseley]
+
+	- ::CGI does return a WSDL as well.
+
+	- regression tests for ::CGI
+
+	- called handlers get the $request as additional fourth parameter
+	  [Patrick Powell]
+
+	- examples/namesservice/client.pl, demonstrate send-hook
+	  based on example by [Patrick Powell]
+
+	- examples/namesservice/server.pl, added server restart protection
+	  by [Patrick Powell]
+
+	- add $request parameter to postprocess [Patrick Powell]
+
+	- ability to sub-set the operations in ::Daemon::operationsFromWSDL()
+	  based on service, port, or binding.
+
 version 3.00: Fri Apr 15 11:22:41 CEST 2011
 
 	Changes:

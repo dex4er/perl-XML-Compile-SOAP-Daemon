@@ -1,4 +1,4 @@
-# Copyrights 2007-2011 by Mark Overmeer.
+# Copyrights 2007-2012 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
 # Pod stripped from pm file by OODoc 2.00.
@@ -7,36 +7,114 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::CGI;
 use vars '$VERSION';
-$VERSION = '3.00';
+$VERSION = '3.01';
 
 use base 'XML::Compile::SOAP::Daemon';
 
 our @ISA;
 
 use Log::Report 'xml-compile-soap-daemon';
-use CGI 3.50, ':cgi';
+use CGI 3.53, ':cgi';
+use Encode;
+
+# do not depend on LWP
+use constant
+  { RC_OK                 => 200
+  , RC_METHOD_NOT_ALLOWED => 405
+  , RC_NOT_ACCEPTABLE     => 406
+  };
+
+
+#--------------------
 
 
 sub runCgiRequest(@) {shift->run(@_)}
 
+
 # called by SUPER::run()
-sub _run($)
-{   my ($self, $args) = @_;
+sub _run($;$)
+{   my ($self, $args, $test_cgi) = @_;
 
-    my $q = CGI->new;
+    my $q      = $test_cgi || $args->{query} || CGI->new;
+    my $method = $ENV{REQUEST_METHOD} || 'POST';
+    my $ct     = $ENV{CONTENT_TYPE}   || 'text/plain';
+    $ct =~ s/\;\s.*//;
 
-    my ($rc, $msg, $xmlout)
-      = $self->process(\$query->param('POSTDATA'), $q, $ENV{soapAction});
+    return $self->sendWsdl($q)
+        if $method eq 'GET' && url =~ m/ \? WSDL $ /x;
 
-    print $q->( -type  => 'text/xml'
-              , -nph    => 1
-              , -status => "$rc $msg"
-              , -Content_length => length($xmlout)
-              );
+    my ($rc, $msg, $err, $mime, $bytes);
+    if($method ne 'POST' && $method ne 'M-POST')
+    {   ($rc, $msg) = (RC_METHOD_NOT_ALLOWED, 'only POST or M-POST');
+        $err = 'attempt to connect via GET';
+    }
+    elsif($ct !~ m/\bxml\b/)
+    {   ($rc, $msg) = (RC_NOT_ACCEPTABLE, 'required is XML');
+        $err = 'content-type seems to be text/plain, must be some XML';
+    }
+    else
+    {   my $charset = $q->charset || 'ascii';
+        my $xmlin   = decode $charset, $q->param('POSTDATA');
+        my $action  = $ENV{HTTP_SOAPACTION} || $ENV{SOAPACTION} || '';
+        $action     =~ s/["'\s]//g;   # sometimes illegal quoting and blanks
+        ($rc, $msg, my $xmlout) = $self->process(\$xmlin, $q, $action);
 
-    print $xmlout;
+        if(UNIVERSAL::isa($xmlout, 'XML::LibXML::Document'))
+        {   $bytes = $xmlout->toString($rc == RC_OK ? 0 : 1);
+            $mime  = 'text/xml; charset="utf-8"';
+        }
+        else
+        {   $err   = $xmlout;
+        }
+    }
+
+    unless($bytes)
+    {   $bytes = "[$rc] $err\n";
+        $mime  = 'text/plain';
+    }
+
+    my %headers =
+      ( -status  => "$rc $msg"
+      , -type    => $mime
+      , -charset => 'utf-8'
+      , -nph     => 1
+      );
+
+    if(my $pp = $args->{postprocess})
+    {   $pp->($args, \%headers, $rc, \$bytes);
+    }
+
+    $headers{-Content_length} = length $bytes;
+    print $q->header(\%headers);
+    print $bytes;
 }
 
+sub setWsdlResponse($)
+{   my ($self, $fn) = @_;
+    $fn or return;
+    local *WSDL;
+    open WSDL, '<:raw', $fn
+        or fault __x"cannot read WSDL from {file}", file => $fn;
+    local $/;
+    $self->{wsdl_data} = <WSDL>;
+    close WSDL;
+}
+
+sub sendWsdl($)
+{   my ($self, $q) = @_;
+
+    print $q->header
+      ( -status  => RC_OK.' WSDL specification'
+      , -type    => 'application/wsdl+xml'
+      , -charset => 'utf-8'
+      , -nph     => 1
+
+      , -Content_length => length($self->{wsdl_data})
+      );
+
+    print $self->{wsdl_data};
+}
+    
 #-----------------------------
 
 

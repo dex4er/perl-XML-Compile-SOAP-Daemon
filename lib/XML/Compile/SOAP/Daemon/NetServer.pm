@@ -1,4 +1,4 @@
-# Copyrights 2007-2011 by Mark Overmeer.
+# Copyrights 2007-2012 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
 # Pod stripped from pm file by OODoc 2.00.
@@ -7,11 +7,14 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::NetServer;
 use vars '$VERSION';
-$VERSION = '3.00';
+$VERSION = '3.01';
 
+
+# The selected type of netserver gets added to the @ISA during new(),
+# so there are two base-classes!
 use base 'XML::Compile::SOAP::Daemon';
-
 our @ISA;
+
 use Log::Report 'xml-compile-soap-daemon';
 
 use HTTP::Daemon              ();
@@ -130,6 +133,7 @@ sub _run($)
     delete $args->{log_file};      # Net::Server should not mess with my preps
     $args->{no_client_stdout} = 1; # it's a daemon, you know
     lwp_add_header Server => $self->{prop}{name};
+    $self->{XCSDN_pp} = delete $args->{postprocess};
 
     $ISA[1]->can('run')->($self, $args);    # never returns
 }
@@ -151,6 +155,7 @@ eval {
           , maxmsgs  => $prop->{client_maxreq}
           , reqbonus => $prop->{client_reqbonus}
           , handler  => sub {$self->process(@_)}
+          , postprocess => $self->{XCSDN_pp};
     };
 
     info __x"connection ended with force; {error}", error => $@

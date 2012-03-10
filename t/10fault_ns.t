@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Attempt to produce all errors
+# Attempt to produce all errors when running Net::Server
 
 use warnings;
 use strict;

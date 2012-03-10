@@ -107,7 +107,7 @@ See L<XML::Compile::SOAP::Daemon/"Attributes">
 
 See L<XML::Compile::SOAP::Daemon/"Attributes">
 
-=item $obj-E<gt>B<outputCharset>
+=item $obj-E<gt>B<outputCharset>()
 
 See L<XML::Compile::SOAP::Daemon/"Attributes">
 
@@ -124,7 +124,20 @@ See L<XML::Compile::SOAP::Daemon/"Running the server">
 =item $obj-E<gt>B<run>(OPTIONS)
 
 See Net::Server subroutine run, but the OPTIONS are passed as list, not
-as HASH.
+as HASH. You may pass any option to which accepted by the Net::Server
+extension you are using.
+
+ -Option     --Default
+  postprocess  undef
+
+=over 2
+
+=item postprocess => CODE
+
+See the section about this option in the DETAILS chapter of the
+L<XML::Compile::SOAP::Daemon::LWPutil|XML::Compile::SOAP::Daemon::LWPutil> manual-page.
+
+=back
 
 =back
 
@@ -170,7 +183,7 @@ See L<XML::Compile::SOAP::Daemon/"Helpers">
 
 See L<XML::Compile::SOAP::Daemon/"Helpers">
 
-=item $obj-E<gt>B<soapVersions>
+=item $obj-E<gt>B<soapVersions>()
 
 See L<XML::Compile::SOAP::Daemon/"Helpers">
 
@@ -187,25 +200,6 @@ See L<XML::Compile::SOAP::Daemon/"Helpers">
 =head3 Returning private errors
 
 =head2 Configuration options
-
-=head3 logging
-
-An attempt is made to merge XML::Compile's Log::Report and Net::Server
-log configuration.  By hijacking the C<log()> method, all Net::Server
-internal errors are dispatched over the Log::Report framework.  Log levels
-are translated into report reasons: 0=ERROR, 1=WARNING, 2=NOTICE, 3=INFO,
-4=TRACE.
-
-When you specify C<Sys::Syslog> or a filename, default dispatchers of type
-SYSLOG resp FILE are created for you.  When the C<log_file> type is set to
-C<Log::Report>, you have much more control over the process, but all log
-related configuration options will get ignored.  In that case, you must
-have initialized the dispatcher framework the way Log::Report is doing
-it: before the daemon is initiated. See Log::Report subroutine dispatcher.
-
-  Key          Value                            Default
-  log_file     filename|Sys::Syslog|Log::Report Log::Report
-  log_level    0..4 | REASON                    2 (NOTICE)
 
 This module will wrap any kind of Net::Server, for instance a
 Net::Server::PreFork.  It depends on the type of C<Net::Server>
@@ -240,10 +234,29 @@ were handled, the connection will be terminated.
 
 The C<name> is included in the reply messages.
 
+=head3 logging
+
+An attempt is made to merge XML::Compile's Log::Report and Net::Server
+log configuration.  By hijacking the C<log()> method, all Net::Server
+internal errors are dispatched over the Log::Report framework.  Log levels
+are translated into report reasons: 0=ERROR, 1=WARNING, 2=NOTICE, 3=INFO,
+4=TRACE.
+
+When you specify C<Sys::Syslog> or a filename, default dispatchers of type
+SYSLOG resp FILE are created for you.  When the C<log_file> type is set to
+C<Log::Report>, you have much more control over the process, but all log
+related configuration options will get ignored.  In that case, you must
+have initialized the dispatcher framework the way Log::Report is doing
+it: before the daemon is initiated. See Log::Report subroutine dispatcher.
+
+  Key          Value                            Default
+  log_file     filename|Sys::Syslog|Log::Report Log::Report
+  log_level    0..4 | REASON                    2 (NOTICE)
+
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 3.00,
-built on April 15, 2011. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.01,
+built on February 13, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
 
 Other distributions in this suite:
 L<XML::Compile>,
@@ -251,7 +264,8 @@ L<XML::Compile::SOAP>,
 L<XML::Compile::SOAP12>,
 L<XML::Compile::SOAP::Daemon>,
 L<XML::Compile::SOAP::WSA>,
-L<XML::Compile::SOAP::WSS>,
+L<XML::Compile::C14N>,
+L<XML::Compile::WSS>,
 L<XML::Compile::Tester>,
 L<XML::Compile::Cache>,
 L<XML::Compile::Dumper>,
@@ -268,7 +282,7 @@ on C<irc.perl.org>.
 
 =head1 LICENSE
 
-Copyrights 2007-2011 by Mark Overmeer. For other contributors see ChangeLog.
+Copyrights 2007-2012 by Mark Overmeer. For other contributors see ChangeLog.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

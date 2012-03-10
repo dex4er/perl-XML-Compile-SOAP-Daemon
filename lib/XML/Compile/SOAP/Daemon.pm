@@ -1,4 +1,4 @@
-# Copyrights 2007-2011 by Mark Overmeer.
+# Copyrights 2007-2012 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
 # Pod stripped from pm file by OODoc 2.00.
@@ -7,12 +7,11 @@ use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '3.00';
+$VERSION = '3.01';
 
 our @ISA;   # filled-in at new().
 
 use Log::Report 'xml-compile-soap-daemon';
-dispatcher SYSLOG => 'default';
 
 use XML::LibXML        ();
 use XML::Compile::Util qw/type_of_node/;
@@ -93,11 +92,14 @@ sub addSoapAction(@)
 
 sub run(@)
 {   my ($self, %args) = @_;
+ eval {
     notice __x"WSA module loaded, but not used"
         if XML::Compile::SOAP::WSA->can('new') && !keys %{$self->{wsa_input}};
 
     $self->{wsa_input_rev}  = +{ reverse %{$self->{wsa_input}} };
     $self->_run(\%args);
+ };
+ error $@ if $@;
 }
 
 
@@ -108,10 +110,12 @@ sub process($)
 {   my ($self, $input, $req, $soapaction) = @_;
 
     my $xmlin;
-    if(ref $input eq 'SCALAR')
+    if(! defined $input)
+    {  return $self->faultNotSoapMessage('No input');
+    }
+    elsif(ref $input eq 'SCALAR')
     {   $xmlin = try { $parser->parse_string($$input) };
-        !$@ && $input
-            or return $self->faultInvalidXML($@->died)
+        return $self->faultInvalidXML($@->died) if $@;
     }
     else
     {   $xmlin = $input;
@@ -140,7 +144,7 @@ sub process($)
     {   if(my $name = $wsa_in->{$wsa_action})
         {   my $handler = $handlers->{$name};
             local $info->{selected_by} = 'wsa-action';
-            my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info);
+            my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info, $req);
             if($xmlout)
             {   trace "data ready for $version $name, via wsa $wsa_action";
                 return ($rc, $msg, $xmlout);
@@ -154,9 +158,9 @@ sub process($)
     {   if(my $name = $sa->{$soapaction})
         {   my $handler = $handlers->{$name};
             local $info->{selected_by} = 'soap-action';
-            my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info);
+            my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info, $req);
             if($xmlout)
-            {   trace "data ready for $version $name, via sa $soapaction";
+            {   trace "data ready for $version $name, via sa '$soapaction'";
                 return ($rc, $msg, $xmlout);
             }
         }
@@ -168,7 +172,7 @@ sub process($)
     {   keys %$handlers;  # reset each()
         $info->{selected_by} = 'attempt all';
         while(my ($name, $handler) = each %$handlers)
-        {   my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info);
+        {   my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info, $req);
             defined $xmlout or next;
 
             trace "data ready for $version $name";
@@ -199,18 +203,17 @@ sub operationsFromWSDL($@)
     my $wsa_input  = $self->{wsa_input};
     my $wsa_output = $self->{wsa_output};
 
-    my @ops  = $wsdl->operations;
-    unless(@ops)
-    {   info __x"no operations in WSDL";
-        return;
-    }
+    my $ops = $args{operations};
+    my @ops = $ops ? @$ops : $wsdl->operations(%args);
+    @ops or return;   # none selected
 
     foreach my $op (@ops)
     {   my $name = $op->name;
-        $names{$name}++;
-        my $code;
+        warning "multiple operations with name {name}", name => $name
+            if $names{$name}++;
 
-        if(my $callback = delete $callbacks{$name})
+        my $code;
+        if(my $callback = $callbacks{$name})
         {   UNIVERSAL::isa($callback, 'CODE')
                or error __x"callback {name} must provide a CODE ref"
                     , name => $name;
@@ -240,8 +243,11 @@ sub operationsFromWSDL($@)
 
     info __x"added {nr} operations from WSDL", nr => (scalar @ops);
 
-    warning __x"no operation for callback handler `{name}'", name => $_
-        for sort keys %callbacks;
+    if(keys %names != keys %callbacks)
+    {   $names{$_}
+            or warning __x"no operation for callback handler `{name}'",name=>$_
+                for sort keys %callbacks;
+    }
 
     $self;
 }

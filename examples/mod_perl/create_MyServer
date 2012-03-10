@@ -9,7 +9,7 @@ perl -sn -e '
 if( /nph-server2.cgi START/../nph-server2.cgi END/ ){
 
 	next if /nph-server2.cgi /;
-	s/^#\s+//;
+	s/^#+\s*//;
 	next if /^$/;
 	print;
 }

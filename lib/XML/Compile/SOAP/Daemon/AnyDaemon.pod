@@ -1,37 +1,60 @@
 =head1 NAME
 
-XML::Compile::SOAP::Daemon::CGI - CGI based server
+XML::Compile::SOAP::Daemon::AnyDaemon - SOAP server based on Any::Daemon
 
 =head1 INHERITANCE
 
- XML::Compile::SOAP::Daemon::CGI
+ XML::Compile::SOAP::Daemon::AnyDaemon
    is a XML::Compile::SOAP::Daemon
+
+ XML::Compile::SOAP::Daemon::AnyDaemon
+   is a Any::Daemon
 
 =head1 SYNOPSIS
 
  #### have a look in the examples directory!
- use XML::Compile::SOAP::Daemon::CGI;
- my $daemon = XML::Compile::SOAP::Daemon::CGI->new;
+ use XML::Compile::SOAP::Daemon::AnyDaemon;
+ use XML::Compile::SOAP11;
+ use XML::Compile::SOAP::WSA;  # optional
 
- # initialize definitions from WSDL
+ my $daemon  = XML::Compile::SOAP::Daemon::AnyDaemon->new;
+
+ # daemon definitions from WSDL
  my $wsdl    = XML::Compile::WSDL11->new(...);
  $wsdl->importDefinitions(...); # more schemas
  $daemon->operationsFromWSDL($wsdl, callbacks => ...);
 
- # per connected client
- my $query = CGI->new;
- $daemon->runCgiRequest(query => $query);
+ # daemon definitions added manually (when no WSDL)
+ my $soap11  = XML::Compile::SOAP11::Server->new(schemas => $wsdl->schemas);
+ my $handler = $soap11->compileHandler(...);
+ $daemon->addHandler('getInfo', $soap11, $handler);
+
+ # see what is defined:
+ $daemon->printIndex;
+
+ # finally, run the server.  This never returns.
+ $daemon->run(@daemon_options);
 
 =head1 DESCRIPTION
 
-This module handles the exchange of SOAP messages via Apache, using
-mod_perl and the popular Perl module CGI.  Have a look at the
-F<examples/> directory, contained in the C<XML-Compile-SOAP-Daemon>
-distribution.
+This module handles the exchange of SOAP messages over HTTP with
+Any::Daemon as daemon implementation. It is a simple pre-forked
+daemon, much easier than the Net::Server implementations.
+
+We use HTTP::Daemon as HTTP-connection implementation. The
+HTTP::Request and HTTP::Response objects (provided
+by C<HTTP-Message>) are handled via functions provided by
+L<XML::Compile::SOAP::Daemon::LWPutil|XML::Compile::SOAP::Daemon::LWPutil>.
 
 This abstraction level of the object (code in this pm file) is not
 concerned with parsing or composing XML, but only worries about the
-HTTP transport specifics of SOAP messages.
+HTTP transport specifics of SOAP messages.  The processing of the SOAP
+message is handled by the L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon> base-class.
+
+The server is as flexible as possible: accept M-POST (HTTP Extension
+Framework) and POST (standard HTTP) for any message.  It can be used
+for any SOAP1.1 and SOAP1.2 mixture.  Although SOAP1.2 itself is
+not implemented yet.
 
 =head1 METHODS
 
@@ -39,7 +62,13 @@ HTTP transport specifics of SOAP messages.
 
 =over 4
 
-=item XML::Compile::SOAP::Daemon::CGI-E<gt>B<new>(OPTIONS)
+=item XML::Compile::SOAP::Daemon::AnyDaemon-E<gt>B<new>(OPTIONS)
+
+Create the server handler, which extends some class which implements
+a Net::Server daemon.
+
+As OPTIONS, you can pass everything accepted by Any::Daemon subroutine new,
+like C<pid_file>, C<user>, C<group>, and C<workdir>,
 
  -Option            --Defined in     --Default
   accept_slow_select  XML::Compile::SOAP::Daemon  <true>
@@ -86,35 +115,69 @@ See L<XML::Compile::SOAP::Daemon/"Attributes">
 
 =over 4
 
-=item $obj-E<gt>B<process>(OPTIONS)
+=item $obj-E<gt>B<process>(CLIENT, XMLIN, REQUEST, ACTION)
 
-Process the content of a single message. Not to be called directly.
+See L<XML::Compile::SOAP::Daemon/"Running the server">
 
 =item $obj-E<gt>B<run>(OPTIONS)
 
-Used by L<runCgiRequest()|XML::Compile::SOAP::Daemon::CGI/"Running the server"> to process a connection. Not to be called
-directly.
-
-=item $obj-E<gt>B<runCgiRequest>(OPTIONS)
-
- -Option     --Default
-  postprocess  undef
-  query        <created internally>
+ -Option         --Default
+  background       <true>
+  client_maxreq    100
+  client_reqbonus  0
+  client_timeout   30
+  host             undef
+  listen           SOMAXCONN
+  max_childs       10
+  port             undef
+  postprocess      undef
+  server_name      undef
+  socket           undef
 
 =over 2
 
+=item background => BOOLEAN
+
+=item client_maxreq => NUMBER
+
+Maximum number of requests per connection.
+
+=item client_reqbonus => SECONDS
+
+Time to add to the timeout as bonus per handled client request. Fast
+clients get more time over slow clients, more time to reach their
+maximum number of requests.
+
+=item client_timeout => SECONDS
+
+The maximum time a connection may exist, before being terminated.
+
+=item host => STRING
+
+Ignored when a socket is provided, otherwise required.
+
+=item listen => INTEGER
+
+Ignored when a socket is provided.
+
+=item max_childs => INTEGER
+
+=item port => INTEGER
+
+Ignored when a socket is provided, otherwise required.
+
 =item postprocess => CODE
 
-When defined, the CODE will get called with a HASH (containing OPTIONS
-and other compile information), a HASH of headers (which you may change),
-the HTTP return code, and a reference to the message body (which may be
-changed as well).
+See the section about this option in the DETAILS chapter of the
+L<XML::Compile::SOAP::Daemon::LWPutil|XML::Compile::SOAP::Daemon::LWPutil> manual-page.
 
-Be warned that the message body must be considered as bytes, so not
-as Latin1 or utf-8 string.  You may wish to add or remove bytes. The
-Content-Length will be added to the headers after the call.
+=item server_name => STRING
 
-=item query => <CGI object>
+=item socket => SOCKET
+
+Pass your own socket, in stead of having one created for you. The SOCKET
+must be an C<IO::Socket::INET> (or compatible like IO::Socket::SSL and
+IO::Socket::IP)
 
 =back
 
@@ -167,25 +230,6 @@ See L<XML::Compile::SOAP::Daemon/"Helpers">
 See L<XML::Compile::SOAP::Daemon/"Helpers">
 
 =back
-
-=head1 DETAILS
-
-=head2 Operation handlers
-
-=head2 Returning errors
-
-=head3 Returning general errors
-
-=head3 Returning private errors
-
-=head2 How to use the CGI module
-
-The code and documentation for this module was contributed by Patrick
-Powell in December 2010. Both have seen major changes since.
-
-Go to the F<examples/mod_perl/> directory which is included in
-the distribution of this module, L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon>.
-There you find a README describing the process.
 
 =head1 SEE ALSO
 

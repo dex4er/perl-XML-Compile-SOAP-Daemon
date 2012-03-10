@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 # The versions of the following packages are reported to help understanding
 # the environment in which the tests are run.  This is certainly not a
@@ -42,9 +42,19 @@ my $has_net_server = $@ ? 0 : 1;
 eval "require LWP";
 my $has_lwp = $@ ? 0 : 1;
 
+eval "require CGI";
+my $has_cgi = $@ ? 0 : 1;
+
 if($has_net_server && $has_lwp)
 {   require_ok('XML::Compile::SOAP::Daemon::NetServer');
 }
 else
 {   ok(1, 'Net::Server not installed');
+}
+
+if($has_cgi)
+{   require_ok('XML::Compile::SOAP::Daemon::CGI');
+}
+else
+{   ok(1, 'CGI not installed');
 }

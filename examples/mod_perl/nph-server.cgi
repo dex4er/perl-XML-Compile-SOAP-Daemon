@@ -1,6 +1,4 @@
 #!/usr/bin/perl
-use warnings;
-use strict;
 
 #### See README
 
@@ -8,10 +6,13 @@ use strict;
 # XXX 
 # XXX use Exporter;
 # XXX @ISA = qw(Exporter);
-# XXX @EXPORT = qw( runCgiRequest );
+# XXX @EXPORT_OK = qw( $daemon );
 
+use warnings;
+use strict;
 use CGI;
 
+use lib "/usr/local/www/SOAP";
 my $schemas = "/usr/local/www/SOAP";
 
 # constants, change this if needed (also in the client script?)
@@ -25,7 +26,7 @@ use MyExampleData  qw/$namedb/;
 use MyExampleCalls;
 
 # All the other XML modules should be automatically included.
-use XML::Compile::SOAP::Daemon::NetServer;
+use XML::Compile::SOAP::Daemon::CGI;
 use XML::Compile::WSDL11;
 use XML::Compile::SOAP11;
 use XML::Compile::Util    qw/pack_type/;
@@ -53,28 +54,14 @@ sub create_get_name_count($);
 ##
 
 #
-# I do not like Net::Server to process my command-line options, so
-# process them before Net::Server can get it's hand on them.
-#
+# start with this set to DEBUG, then change it later
 
 my $mode = 'DEBUG';
-
-GetOptions
- # 3 ways to set the verbosity for Log::Report dispatchers
- # select (at least one) of these ways.
-   'v+'        => \$mode  # -v -vv -vvv
- , 'verbose=i' => \$mode  # --verbose=2  (0..3)
- , 'mode=s'    => \$mode  # --mode=DEBUG (DEBUG,ASSERT,VERBOSE,NORMAL)
-   or die "Deamon is not started";
 
 #
 # XML::Compile::* uses Log::Report.  The 'default' dispatcher for error
 # messages is here changed from PERL (die/warn) into using syslog.
 #
-
-# This is an example of Log::Report translation/exception syntax
-error __x"No filenames expected on the command-line"
-    if @ARGV;
 
 use Log::Report 'example';
 dispatcher FILE => 'log', mode => $mode, to => '/tmp/soap';
@@ -120,13 +107,29 @@ create_get_name_count $daemon;
 ########## NPH START
 ########## 
 
-$daemon->runCgiRequest(CGI->new);;
+my $query = CGI->new;
+$daemon->runCgiRequest( query => $query);;
 exit 0;
 
 ##########
 ########## NPH END
 ##########
-
+### 
+###    nph-server2.cgi START
+### 
+###    #!/usr/bin/perl
+###    use lib '/usr/local/www/SOAP';
+###    use Log::Report   'example', syntax => 'SHORT';
+###    use CGI;
+###    use MyServer qw( $daemon );
+###    my $mode = 'DEBUG';
+###    dispatcher FILE => 'log', mode => $mode, to => "/tmp/soap";
+###    my $query = CGI->new;
+###    $daemon->runCgiRequest( query => $query );
+###    exit 0;
+### 
+###    nph-server2.cgi END
+### 
 ##
 ### Server-side implementations of the operations
 ##

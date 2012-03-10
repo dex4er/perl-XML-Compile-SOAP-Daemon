@@ -104,7 +104,12 @@ my $transporter = XML::Compile::Transport::SOAPHTTP->new
   ( address    => $service_address
 # , user_agent => ...
   );
+
 my $http = $transporter->compileClient;
+
+# or, when you need to change something to the message sent:
+#   my $http = $transporter->compileClient(hook => \&transport_hook); 
+# see implementation of transport_hook() far below.
 
 #
 # Get the WSDL and Schema definitions
@@ -394,3 +399,32 @@ sub get_wsdl()
     {   print "no WSDL file published\n";
     }
 }
+
+#
+# transport_hook() demonstrates how the HTTP message can be modified
+# just before transmission/reply checked before decoding.
+#
+
+sub transport_hook($$$)
+{   my ($request, $trace, $transp) = @_;   # $transp = ::SOAPHTTP object
+
+    # take the unlaying transport layer
+    my $ua = $transp->userAgent;
+    trace "hook ua " . Dumper($ua);
+
+    # do something with the message before it's being send
+    my $len = length($request->content);
+    $request->header( My_Header => "Added Header msg length $len" );
+    trace "hook request " . Dumper($request);
+    trace "hook request content " . $request->content;
+
+    # call the remote server
+    my $response = $ua->request($request);
+
+    # modify/check the received answer
+    trace "hook response " . Dumper($response);
+
+    # back to normal SOAP
+    $response;
+};
+

@@ -7,6 +7,11 @@ XML::Compile::SOAP::Daemon::LWPutil - LWP helper routines
  XML::Compile::SOAP::Daemon::LWPutil
    is a Exporter
 
+=head1 SYNOPSIS
+
+  # used by ::Daemon::NetServer
+  #     and ::Daemon::AnyDaemon
+
 =head1 FUNCTIONS
 
 =over 4
@@ -22,13 +27,14 @@ the message (although it often can).
 
 =item B<lwp_handle_connection>(CONNECTION, OPTIONS)
 
-=item B<lwp_make_response>(REQUEST, RC, MSG, BODY)
+=item B<lwp_make_response>(REQUEST, RC, MSG, BODY, [POSTPROC])
 
-=item B<lwp_run_request>(REQUEST, HANDLER, [CONNECTION])
+=item B<lwp_run_request>(REQUEST, HANDLER, [CONNECTION, POSTPROC])
 
 Handle one REQUEST (HTTP::Request object), which was received from
 the CLIENT (string).  When the request has been received, the HANDLER
-is called. With that result, a response message is composed.
+is called. Returns the status, the status as text message, and the
+output as XML::LibXML::Document.
 
 =item B<lwp_wsdl_response>([WSDLFILE|RESPONSE])
 
@@ -38,10 +44,33 @@ RESPONSE object (HTTP::Response).  The response object is returned.
 
 =back
 
+=head1 DETAILS
+
+=head2 Postprocessing responses
+
+The C<LWP> based daemons provide a C<postprocess> option to their C<run()>
+methods.  The parameter is a CODE reference.
+
+When defined, the CODE is called when the response message is ready
+to be returned to the client:
+
+  $code->($request, $response, $status, \$body)
+
+The source C<$requests> is passed as first parameter.  The C<$response>
+is an HTTP::Response object, with all headers but without the body.
+The C<$status> is the result code of the handler.  A value of 200
+(C<HTTP_OK> from C<HTTP::Status>) indicates successful processing of the
+request.  When the status is not HTTP_OK you may skip the postprocessing.
+
+The C<$body> are the bytes which will be added as body to the response
+after this postprocessing has been done.  You may change the body.
+B<Be warned> that the body is not a (latin1 or utf-8) string but already
+encoded into a byte string.
+
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 3.00,
-built on April 15, 2011. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.01,
+built on February 13, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
 
 Other distributions in this suite:
 L<XML::Compile>,
@@ -49,7 +78,8 @@ L<XML::Compile::SOAP>,
 L<XML::Compile::SOAP12>,
 L<XML::Compile::SOAP::Daemon>,
 L<XML::Compile::SOAP::WSA>,
-L<XML::Compile::SOAP::WSS>,
+L<XML::Compile::C14N>,
+L<XML::Compile::WSS>,
 L<XML::Compile::Tester>,
 L<XML::Compile::Cache>,
 L<XML::Compile::Dumper>,
@@ -66,7 +96,7 @@ on C<irc.perl.org>.
 
 =head1 LICENSE
 
-Copyrights 2007-2011 by Mark Overmeer. For other contributors see ChangeLog.
+Copyrights 2007-2012 by Mark Overmeer. For other contributors see ChangeLog.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

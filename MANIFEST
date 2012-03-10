@@ -3,6 +3,7 @@ MANIFEST
 Makefile.PL
 README
 TODO
+examples/any-daemon/server.pl
 examples/mod_perl/README
 examples/mod_perl/create_MyServer
 examples/mod_perl/nph-server.cgi
@@ -16,6 +17,8 @@ examples/namesservice/server.pl
 examples/namesservice/servtempl.pl
 lib/XML/Compile/SOAP/Daemon.pm
 lib/XML/Compile/SOAP/Daemon.pod
+lib/XML/Compile/SOAP/Daemon/AnyDaemon.pm
+lib/XML/Compile/SOAP/Daemon/AnyDaemon.pod
 lib/XML/Compile/SOAP/Daemon/CGI.pm
 lib/XML/Compile/SOAP/Daemon/CGI.pod
 lib/XML/Compile/SOAP/Daemon/LWPutil.pm
@@ -24,7 +27,8 @@ lib/XML/Compile/SOAP/Daemon/NetServer.pm
 lib/XML/Compile/SOAP/Daemon/NetServer.pod
 lib/XML/Compile/SOAP/HTTPDaemon.pm
 t/01use.t
-t/10fault.t
+t/10fault_ns.t
+t/11fault_cgi.t
 t/20wsa.t
 xt/99pod.t
 META.yml                                 Module meta-data (added by MakeMaker)

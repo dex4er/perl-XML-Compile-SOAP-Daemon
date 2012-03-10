@@ -1,22 +1,26 @@
 
 ==== How to run a SOAP::Daemon under CGI
+
 (for mod_perl see further down)
 
 Example of a XML::Compile CGI script
+
    Patrick Powell papowell at astart dot com
    Thu Dec 23 2010
+   Updated Wed Jun 22 13:14:12 PDT 2011 for 
+     XML-Compile-SOAP-Daemon-3.00
 
-This text uses the ~/examples/namesservice/ as example application. Of
-course, you should change that into your own.
+This text uses the ~/examples/namesservice/ as a example application. Of
+course, you should copy that into your own workspace.
 
 1. Put the Perl Modules, WSDL and schema files in a well known location
      (i.e. - the SOAP directory)
      and make sure they are readable by the HTTPD server:
 
      mkdir /usr/local/www/SOAP
-     chmod a+x /usr/local/www/SOAP
+     chmod 755 /usr/local/www/SOAP
      cp namesservice.wsdl namesservice.xsd *.pm /usr/local/www/SOAP
-     chmod a+r /usr/local/www/SOAP/*
+     chmod 644 /usr/local/www/SOAP/*
 
 2. Edit the nph-server.cgi script and set the 'use lib' entry to the directory
      where you copied the Perl Modules. i.e.:
@@ -57,10 +61,9 @@ course, you should change that into your own.
       apachectl restart
 
 6. Check the version of CGI installed on your system.  This MUST
-   be at least 3.50:
+   be at least 3.53:
     perl -MCGI -e 'print "$CGI::VERSION\n"'
-   You should update the CGI module if it is not.  Make sure that
-   there is only one version of the CGI.pm module on your system!
+   You should update the CGI module if it is not.
 
 7. Test to see if you can connect to the HTTPD server and the CGI
    script is executed:
@@ -111,8 +114,9 @@ to do this are many and varied.  The following is shortcut to help with this.
 
    nph-server2.cgi END
 
-   cp nph-server2.cgi /usr/local/www/SOAP
-   chmod a+r /usr/local/www/SOAP/*
+   cp nph-server.cgi *.pm /usr/local/www/apache/cgi-bin/
+   chmod 755 /usr/local/www/apache/cgi-bin/nph-server.cgi
+
 
 4. Check that the new script can load the MyServer.pm modules:
    rm /tmp/soap
@@ -170,10 +174,15 @@ Caveats and Warnings:
    Apache and ModPerl do not always set the current directory of the 
    running CGI script to the directory where the script is located.
    This is partly due to the effect of using Threads.  Rather than trying
-   to fix a large number of (non-Apache) libraries, etc, they simply state
-   that you should assume that the current directory is not the one in
-   which the CGI is executing.
+   to fix a large number of (non-Apache) libraries, etc, the Apache and Mod_perl
+   developers simply state that you should assume that the current
+   directory is not the one in which the CGI script is executing.
 
-   This gets even worse when you combine ModPerl and startup script.
-   They explicitly warn that the current directory is NOT the directory
-   where the startup script is located.
+   This gets even worse when you combine ModPerl and startup scripts.
+   The Mod_perl developers explicitly warn that the current directory
+   is NOT the directory where the startup script is located.
+
+   Finally, the startup script is executed as ROOT, not as the
+   Apache user/group while the CGI scripts are exectuted as the
+   Apache user/group.  This can lead to issues if you open log files
+   at startup time and then use them at run time.

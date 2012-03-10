@@ -61,15 +61,17 @@ use Log::Report   'example', syntax => 'SHORT';
 # Other useful modules
 use Getopt::Long  qw/:config no_ignore_case bundling/;
 use List::Util    qw/first/;
+use IO::File      ();
+use Fcntl         qw/:flock/;
 
 use Data::Dumper;          # Data::Dumper is your friend.
 $Data::Dumper::Indent = 1;
 
 # Forward declarations allow prototype checking
-sub get_countries($$);
-sub get_name_info($$);
-sub get_names_in_country($$);
-sub get_name_count($$);
+sub get_countries($$$);
+sub get_name_info($$$);
+sub get_names_in_country($$$);
+sub get_name_count($$$);
 sub create_get_name_count($);
 
 ##
@@ -81,7 +83,8 @@ sub create_get_name_count($);
 # process them before Net::Server can get it's hand on them.
 #
 
-my $mode = 0;
+my $mode    = 0;
+my $pidfile = ($ENV{TMPDIR} || '/tmp') . '/server.pid';
 
 GetOptions
  # 3 ways to set the verbosity for Log::Report dispatchers
@@ -89,6 +92,7 @@ GetOptions
    'v+'        => \$mode  # -v -vv -vvv
  , 'verbose=i' => \$mode  # --verbose=2  (0..3)
  , 'mode=s'    => \$mode  # --mode=DEBUG (DEBUG,ASSERT,VERBOSE,NORMAL)
+ , 'pidfn=s'   => \$pidfile
    or die "Deamon is not started";
 
 #
@@ -99,6 +103,12 @@ GetOptions
 # This is an example of Log::Report translation/exception syntax
 error __x"No filenames expected on the command-line"
     if @ARGV;
+
+my $lock = IO::File->new($pid_file, 'a');
+   or fault __x"Cannot open lockfile {fn}", fn => $pid_file;
+
+flock $lock, LOCK_EX|LOCK_NB
+   or fault __x"Server already running, lock on {fn}", fn => $pid_file;
 
 #
 # Create the daemon set-up
@@ -160,10 +170,10 @@ create_get_name_count $daemon;
 # All (slow) preparations done, let's start the server
 #
 
-# replace the 'default' output 'PERL' with output to syslog
+# replace the 'default' output backend to PERL with output to syslog
 dispatcher SYSLOG => 'default', mode => $mode;
 
-print "Staring daemon on $serverhost:$serverport\n";
+print "Starting daemon PID=$$ on $serverhost:$serverport\n";
 
 $daemon->run
   ( 
@@ -192,8 +202,8 @@ exit 0;
 # First example, no incoming data
 #
 
-sub get_countries($$)
-{   my ($server, $in) = @_;
+sub get_countries($$$)
+{   my ($server, $in, $request) = @_;
 
     # We do not have to look at the incoming data ($in) in this case,
     # because this message doesn't provide any.
@@ -221,8 +231,8 @@ sub find_name($$)
     (first {lc($_) eq $name} @$names) ? 1 : undef;
 }
 
-sub get_name_info($$)
-{   my ($server, $in) = @_;
+sub get_name_info($$$)
+{   my ($server, $in, $request) = @_;
 
     # debugging daemons is not easy, but you could do things like:
     #      (debug mode is enabled by Log::Report dispatchers with
@@ -277,8 +287,8 @@ sub get_name_info($$)
 ### The third example
 ##
 
-sub get_names_in_country($$)
-{   my ($server, $in) = @_;
+sub get_names_in_country($$$)
+{   my ($server, $in, $request) = @_;
 
     # this should look quite familiar now... a bit more compact!
     my $country = $in->{parameters}{country} || '';
@@ -359,8 +369,8 @@ sub create_get_name_count($)
     $daemon->addHandler('getNameCount', $soap11, $handler);
 }
 
-sub get_name_count($$)
-{   my ($server, $in) = @_;
+sub get_name_count($$$)
+{   my ($server, $in, $request) = @_;
 
     # Althought the message is not specified in a WSDL, the handler is
     # still the same.
