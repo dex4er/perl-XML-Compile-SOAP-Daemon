@@ -1,16 +1,25 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 2.01: Sun Feb 15 23:28:52 CET 2009
+
+	Fixes:
+
+	- perl syntax error when WSDL does not define any operations.
+
+	- require XML::Compile::Cache 0.91
+	          XML::Compile::SOAP  2.02
+
 version 2.00: Thu Feb 12 10:18:11 CET 2009
 
 	Changes:
 
-	- Be compatible with XML::Compile::SOAP 2.00_01
+	- Be compatible with XML::Compile::SOAP 2.01
 
 	- adapted examples to new interface.  Minor changes.
 
 	- removed new(support_versions) and isSupportedVersion().
-	  Simply only load the implementation you daemons want to support.
+	  Simply only load the implementations you daemon will to support.
 
 	- used HTTP error codes have changed.
 

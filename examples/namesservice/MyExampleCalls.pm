@@ -9,7 +9,7 @@
 
 package MyExampleCalls;
 use vars '$VERSION';
-$VERSION = '2.00';
+$VERSION = '2.01';
 
 use base qw/Exporter/;
 

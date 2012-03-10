@@ -112,7 +112,7 @@ compare_answer($ans1, <<__EXPECTED, 'not POST');
 only POST or M-POST
 text/plain
 
-attempt to connect via GET
+[405] attempt to connect via GET
 __EXPECTED
 
 ### Non XML POST request
@@ -125,7 +125,7 @@ compare_answer($ans2, <<__EXPECTED, 'not XML');
 required is XML
 text/plain
 
-content-type seems to be text/plain, must be some XML
+[406] content-type seems to be text/plain, must be some XML
 __EXPECTED
 
 ### XML but no soapAction
@@ -139,7 +139,7 @@ compare_answer($ans3, <<__EXPECTED, 'not SOAP');
 not SOAP
 text/plain
 
-soap requires an soapAction header field
+[417] soap requires an soapAction header field
 __EXPECTED
 
 ### XML parsing fails
@@ -155,7 +155,7 @@ compare_answer($ans4, <<__EXPECTED, 'parsing error');
 XML syntax error
 text/plain
 
-The XML cannot be parsed: :1: parser error : Premature end of data in tag bad-xml line 1
+[422] The XML cannot be parsed: :1: parser error : Premature end of data in tag bad-xml line 1
 __EXPECTED
 
 ### Not SOAP Envelope
@@ -171,7 +171,7 @@ compare_answer($ans5, <<__EXPECTED, 'no soap envelope');
 message not SOAP
 text/plain
 
-The message was XML, but not SOAP; not an Envelope but `not-soap'
+[403] The message was XML, but not SOAP; not an Envelope but `not-soap'
 __EXPECTED
 
 ### Unknown SOAP Envelope
@@ -187,7 +187,7 @@ compare_answer($ans6, <<__EXPECTED, 'unknown soap envelope');
 SOAP version not supported
 text/plain
 
-The soap version `xx' is not supported
+[501] The soap version `xx' is not supported
 __EXPECTED
 
 

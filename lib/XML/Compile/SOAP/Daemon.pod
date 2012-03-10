@@ -233,17 +233,6 @@ by default to STDOUT.
 
 =back
 
-$obj-E<gt>B<protocolError>(STATUS, STATUS_TEXT, MESSAGE)
-
-=over 4
-
-Respond to the caller that the received request does not look like
-anything we can process automatically.  The STATUS and STATUS_TEXT
-are like HTTP, but may be translated into some other transport
-protocol convension.
-
-=back
-
 $obj-E<gt>B<soapVersions>
 
 =over 4
@@ -297,8 +286,8 @@ it: before the daemon is initiated. See Log::Report subroutine dispatcher.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.00,
-built on February 12, 2009. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.01,
+built on February 15, 2009. Website: F<http://perl.overmeer.net/xml-compile/>
 
 All modules in this suite:
 L<XML::Compile>,

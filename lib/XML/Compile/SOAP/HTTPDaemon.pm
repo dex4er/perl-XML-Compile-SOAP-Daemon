@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::HTTPDaemon;
 use vars '$VERSION';
-$VERSION = '2.00';
+$VERSION = '2.01';
 
 use base 'XML::Compile::SOAP::Daemon';
 
@@ -23,6 +23,18 @@ use HTTP::Daemon   ();
 use XML::Compile::SOAP::Util  qw/:daemon/;
 use Time::HiRes    qw/time alarm/;
 
+
+my @default_headers;
+sub make_default_headers
+{   foreach my $pkg (qw/XML::Compile XML::Compile::SOAP
+        XML::Compile::SOAP::Daemon XML::LibXML LWP/)
+    {   no strict 'refs';
+        my $version = ${"${pkg}::VERSION"} || 'undef';
+        (my $field = "X-$pkg-Version") =~ s/\:\:/-/g;
+        push @default_headers, $field => $version;
+    }
+    @default_headers;
+}
 
 sub options()
 {   my ($self, $ref) = @_;
@@ -41,19 +53,6 @@ sub default_values()
      , client_reqbonus => 0, name => 'soap daemon');
     @$def{keys %mydef} = values %mydef;
     $def;
-}
-
-sub headers($)
-{   my ($self, $response) = @_;
-    $response->header(Server => $self->{prop}{name});
-    $self;
-}
-
-sub headersForXML($)
-{  my ($self, $response) = @_;
-   $self->headers($response);
-   $response->header('Content-Type' => 'text/xml; charset="utf-8"');
-   $self;
 }
 
 
@@ -104,31 +103,61 @@ sub runRequest($$)
 
     my $client   = $connection->peerhost;
     if($request->method !~ m/^(?:M-)?POST/)
-    {   return $self->protocolError(RC_METHOD_NOT_ALLOWED
+    {   return $self->makeResponse($request, RC_METHOD_NOT_ALLOWED
           , "only POST or M-POST"
-          , "attempt to connect via ".$request->method)
+          , "attempt to connect via ".$request->method);
     }
 
     my $media    = $request->content_type || 'text/plain';
     $media =~ m{[/+]xml$}i
-        or return $self->protocolError(RC_NOT_ACCEPTABLE
+        or return $self->makeResponse($request, RC_NOT_ACCEPTABLE
           , 'required is XML'
           , "content-type seems to be $media, must be some XML");
 
     my $action   = $self->actionFromHeader($request);
     defined $action
-        or return $self->protocolError(RC_EXPECTATION_FAILED
-          , 'not SOAP'
-          , "soap requires an soapAction header field");
+        or return $self->makeResponse($request, RC_EXPECTATION_FAILED
+          , 'not SOAP', "soap requires an soapAction header field");
 
     my $ct       = $request->header('Content-Type');
     my $charset  = $ct =~ m/\;\s*type\=(["']?)([\w-]*)\1/ ? $2: 'utf-8';
     my $xmlin    = $request->decoded_content(charset => $charset, ref => 1);
-    my $xmlout   = $self->process($xmlin);
 
-      UNIVERSAL::isa($xmlout, 'HTTP::Response') ? $xmlout
-    : $self->acceptResponse($request, RC_OK, $xmlout);
+    my ($status, $msg, $out) = $self->process($xmlin);
+    $self->makeResponse($request, $status, $msg, $out);
 }
+
+
+sub makeResponse($$$$)
+{   my ($self, $request, $status, $msg, $body) = @_;
+
+    my $response = HTTP::Response->new($status, $msg);
+    @default_headers or make_default_headers;
+    $response->header(Server => $self->{prop}{name}, @default_headers);
+    $response->protocol($request->protocol);  # match request's
+
+    my $s;
+    if(UNIVERSAL::isa($body, 'XML::LibXML::Document'))
+    {   $s = $body->toString($status == RC_OK ? 0 : 1);
+        $response->header('Content-Type' => 'text/xml; charset="utf-8"');
+    }
+    else
+    {   $s = "[$status] $body";
+        $response->header(Content_Type => 'text/plain');
+    }
+
+    $response->content_ref(\$s);
+    { use bytes; $response->header('Content-Length' => length $s); }
+
+    if(substr($request->method, 0, 2) eq 'M-')
+    {   # HTTP extension framework.  More needed?
+        $response->header(Ext => '');
+    }
+
+    $response;
+}
+
+#-----------------------------
 
 
 sub actionFromHeader($)
@@ -156,41 +185,5 @@ sub actionFromHeader($)
     :                               '';
 }
 
-sub acceptResponse($$$)
-{   my ($self, $request, $status, $xmlout) = @_;
-
-    my $resp = HTTP::Response->new($status);
-    $resp->protocol($request->protocol);  # match request
-    my $s    = $xmlout->toString;
-    $resp->content_ref(\$s);
-    { use bytes; $resp->header('Content-Length' => length $s); }
-    $self->headersForXML($resp);
-
-    if(substr($request->method, 0, 2) eq 'M-')
-    {   # HTTP extension framework.  More needed?
-        $resp->header(Ext => '');
-    }
-
-    $resp;
-}
-
-sub soapFault($$$)
-{   my ($self, $rc, $abstract, $xml) = @_;
-    my $resp = HTTP::Response->new($rc, $abstract);
-    my $s    = $resp->content($xml->toString(1));
-    { use bytes; $resp->header('Content-Length' => length $s); }
-    $self->headersForXML($resp);
-    $resp;
-}
-
-sub protocolError($$$)
-{   my ($self, $rc, $abstract, $text) = @_;
-    $self->SUPER::protocolError($rc, $abstract, $text);
-    my $resp = HTTP::Response->new($rc, $abstract, [], $text);
-    $self->headers($resp);
-    $resp->header(Content_Type => 'text/plain');
-    $resp;
-}
-    
 
 1;

@@ -148,6 +148,7 @@ $daemon->run
    # configuration options.  It also depends on the Net::Server
    # implementation you base the SOAP daemon on.  See new(base_on)
    name    => 'NamesService'
+ , host    => SERVERHOST
  , port    => SERVERPORT
 
    # Net::Server::PreFork parameters

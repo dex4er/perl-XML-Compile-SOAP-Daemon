@@ -13,7 +13,7 @@ use lib '../LogReport/lib';
 
 package TestTools;
 use vars '$VERSION';
-$VERSION = '2.00';
+$VERSION = '2.01';
 
 use base 'Exporter';
 

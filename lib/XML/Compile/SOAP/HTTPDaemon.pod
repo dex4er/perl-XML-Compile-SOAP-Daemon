@@ -89,6 +89,12 @@ See L<XML::Compile::SOAP::Daemon/"Preparations">
 
 =head2 Handlers
 
+$obj-E<gt>B<makeResponse>(REQUEST, RC, MSG, BODY)
+
+=over 4
+
+=back
+
 $obj-E<gt>B<runRequest>(REQUEST, CONNECTION)
 
 =over 4
@@ -151,14 +157,6 @@ See L<XML::Compile::SOAP::Daemon/"Helpers">
 
 =back
 
-$obj-E<gt>B<protocolError>(STATUS, STATUS_TEXT, MESSAGE)
-
-=over 4
-
-See L<XML::Compile::SOAP::Daemon/"Helpers">
-
-=back
-
 $obj-E<gt>B<soapVersions>
 
 =over 4
@@ -199,8 +197,8 @@ The C<name> is included in the reply messages.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.00,
-built on February 12, 2009. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.01,
+built on February 15, 2009. Website: F<http://perl.overmeer.net/xml-compile/>
 
 All modules in this suite:
 L<XML::Compile>,

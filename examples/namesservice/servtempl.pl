@@ -35,6 +35,7 @@ GetOptions
  , 'mode=s'    => \$mode  # --mode=DEBUG (DEBUG,ASSERT,VERBOSE,NORMAL)
    or die "Deamon is not started";
 
+# in preparation, use standard Perl output in $mode
 dispatcher PERL => 'default', mode => $mode;
 
 error __x"No filenames expected on the command-line"
@@ -49,11 +50,13 @@ my %callbacks = ();
 
 $daemon->operationsFromWSDL($wsdl, callbacks => \%callbacks);
 
+# as daemon, replace Perl default by syslog for output
 dispatcher SYSLOG => 'default', mode => $mode;
 
 $daemon->run
- ( name    => SERVERNAME
- , port    => SERVERPORT
+ ( name => SERVERNAME
+ , host => SERVERHOST
+ , port => SERVERPORT
  );
 
 info "Daemon stopped\n";

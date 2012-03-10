@@ -14,6 +14,8 @@ my @show_versions =
  qw/Test::More
     XML::Compile
     XML::Compile::SOAP
+    XML::Compile::Cache
+    XML::Compile::Tester
     XML::LibXML
     Net::Server
     LWP
