@@ -12,6 +12,7 @@ XML::Compile::SOAP::Daemon - SOAP accepting server
  #### have a look in the examples directory!
  use XML::Compile::SOAP::HTTPDaemon;
  use XML::Compile::SOAP11;
+ use XML::Compile::SOAP::WSA;  # optional
 
  # Be warned that the daemon will be Net::Server based, which consumes
  # command-line arguments!
@@ -76,9 +77,30 @@ a Net::Server.
 Any daemon configuration parameter should be passed with L<run()|XML::Compile::SOAP::Daemon/"Running the server">.  This
 is a little tricky.  Read below in the L</Configuration options> section.
 
- Option        --Default
- based_on        <internal Net::Server::PreFork>
- output_charset  'UTF-8'
+ Option            --Default
+ accept_slow_select  <true>
+ based_on            <internal Net::Server::PreFork>
+ output_charset      'UTF-8'
+ soap_action_input   {}
+ wsa_action_input    {}
+ wsa_action_output   {}
+
+. accept_slow_select => BOOLEAN
+
+=over 4
+
+Traditional SOAP does not have a simple way to find-out which operation
+is being called. The only way to figure-out which operation is needed,
+is by trying all defined operations... until one matches.
+
+Later, people started to use soapAction (which was officially only
+for proxies) and then the WSA header extension. Both of them make
+it easy to find the right handler one on one.
+
+Disabling C<accept_slow_select> will protect you againts various
+forms of DoS-attacks, however is often not possible.
+
+=back
 
 . based_on => Net::Server OBJECT|CLASS
 
@@ -99,9 +121,60 @@ The character-set to be used for the output XML document.
 
 =back
 
+. soap_action_input => HASH|ARRAY
+
+=over 4
+
+The keys are port names, with as value the related SOAPAction header
+field content (without quotes). Often, these SOAPAction fields originate
+from the WSDL.
+
+=back
+
+. wsa_action_input => HASH|ARRAY
+
+=over 4
+
+The keys are port names, the values are strings which are used by
+clients to indicate which server operation they want to use. Often,
+an WSDL contains this information in C<wsaw:Action> attributes; that
+info is added to this HASH automatically.
+
+=back
+
+. wsa_action_output => HASH|ARRAY
+
+=over 4
+
+The keys are port names, the values are strings which the server will
+add to replies to the client. Often, an WSDL contains this information
+in C<wsaw:Action> attributes.
+
+=back
+
 =back
 
 =head2 Attributes
+
+$obj-E<gt>B<addSoapAction>(HASH|PAIRS)
+
+=over 4
+
+Map SOAPAction headers only operations. You do not need to map
+explicitly when the info can be derived from the WSDL.
+
+=back
+
+$obj-E<gt>B<addWsaTable>(('INPUT'|'OUTPUT'), [HASH|PAIRS])
+
+=over 4
+
+Map operation name onto respectively server-input or server-output
+messages, used for C<wsa:Action> fields in the header. Usually, these
+values are automatically taken from the WSDL (but only if the WSA
+extension is loaded).
+
+=back
 
 $obj-E<gt>B<outputCharset>
 
@@ -172,8 +245,8 @@ WSDLs into one server, simply by calling this method repeatedly.
 =over 4
 
 The keys are the port names, as defined in the WSDL.  The values are CODE
-references which are called in case a message is received which seems
-to be addressing the port (this is a guess). See L</Operation handlers>
+references which are called in case a message is received which is
+addressing the port (this is a guess). See L</Operation handlers>
 
 =back
 
@@ -365,8 +438,8 @@ matching the need for the fault.  Example:
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.03,
-built on September 30, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.04,
+built on November 01, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
 
 All modules in this suite:
 L<XML::Compile>,

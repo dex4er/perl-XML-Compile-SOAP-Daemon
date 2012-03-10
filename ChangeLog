@@ -1,6 +1,21 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 2.04; Mon Nov  1 17:21:38 CET 2010
+
+	Improvements:
+
+	- remove dependency for Test::Pod
+
+	- implement operation selection based on wsa:action headers.
+
+	- implement operation selection based on SOAPAction HTTP header.
+
+	- add option for new(accept_slow_select) to be able to
+	  disable tranditional SOAP operation selection
+
+	- add wsa:Action values to the output, when ::WSA is loaded.
+
 version 2.03: Thu Sep 30 17:30:04 CEST 2010
 
 	Fixes:

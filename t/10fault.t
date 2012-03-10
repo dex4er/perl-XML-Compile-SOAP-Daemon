@@ -26,7 +26,7 @@ plan skip_all => "Please contribute by porting tests to Windows"
 
 my $daemon = XML::Compile::SOAP::HTTPDaemon->new;
 
-my $pidfile = "/tmp/soapdaemon-test-$$.pid";
+my $pidfile = "soapdaemon-test-$$.pid";
 my $soapenv = SOAP11ENV;
 
 unless(fork())
@@ -202,7 +202,7 @@ charset="utf-8"
   <SOAP-ENV:Body>
     <SOAP-ENV:Fault>
       <faultcode>SOAP-ENV:Server.notRecognized</faultcode>
-      <faultstring>SOAP11 there are no handlers available, so also not {http://schemas.xmlsoap.org/soap/envelope/}something</faultstring>
+      <faultstring>SOAP11 there are no handlers available, so also not for {http://schemas.xmlsoap.org/soap/envelope/}something</faultstring>
       <faultactor>http://schemas.xmlsoap.org/soap/actor/next</faultactor>
     </SOAP-ENV:Fault>
   </SOAP-ENV:Body>

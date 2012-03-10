@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               XML-Compile-SOAP-Daemon
-version:            2.03
+version:            2.04
 abstract:           Daemon handling XML-SOAP
 author:
     - Mark Overmeer
@@ -16,11 +16,10 @@ requires:
     Net::Server:          0.97
     Test::Deep:           0.095
     Test::More:           0.54
-    Test::Pod:            1
     Time::HiRes:          0
     XML::Compile:         1.18
     XML::Compile::Cache:  0.91
-    XML::Compile::SOAP:   2.17
+    XML::Compile::SOAP:   2.18
     XML::Compile::Tester:  0.05
 no_index:
     directory:

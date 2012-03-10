@@ -4,10 +4,10 @@ use 5.008;
 
 WriteMakefile
  ( NAME	 	=> 'XML::Compile::SOAP::Daemon'
- , VERSION	=> '2.03'
+ , VERSION	=> '2.04'
  , PREREQ_PM    =>
    { XML::Compile         => 1.18
-   , XML::Compile::SOAP   => 2.17
+   , XML::Compile::SOAP   => 2.18
    , XML::Compile::Tester => 0.05
    , XML::Compile::Cache  => 0.91
 
@@ -17,7 +17,6 @@ WriteMakefile
    , Net::Server     => 0.97
    , Test::More      => 0.54
    , Test::Deep      => 0.095
-   , Test::Pod       => 1.00
    }
  , AUTHOR       => 'Mark Overmeer'
  , ABSTRACT     => 'Daemon handling XML-SOAP'

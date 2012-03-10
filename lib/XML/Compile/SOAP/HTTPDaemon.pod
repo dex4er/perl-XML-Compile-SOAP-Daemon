@@ -43,6 +43,22 @@ See L<XML::Compile::SOAP::Daemon/"Constructors">
 
 =head2 Attributes
 
+$obj-E<gt>B<addSoapAction>(HASH|PAIRS)
+
+=over 4
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=back
+
+$obj-E<gt>B<addWsaTable>(('INPUT'|'OUTPUT'), [HASH|PAIRS])
+
+=over 4
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=back
+
 $obj-E<gt>B<outputCharset>
 
 =over 4
@@ -197,8 +213,8 @@ The C<name> is included in the reply messages.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.03,
-built on September 30, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.04,
+built on November 01, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
 
 All modules in this suite:
 L<XML::Compile>,
