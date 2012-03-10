@@ -1,6 +1,22 @@
 
 === version history of XML::Compile::SOAP::Server
 
+version 0.11: Fri Jun  6 16:19:06 CEST 2008
+
+	Fixes:
+
+	- add Content-Length to the HTTP answer.
+
+	Changes:
+
+	- requires XML::Compile::Tester.
+
+	- depends on XML::Compile::SOAP 0.73
+
+	Improvements:
+
+	- convert tests to use XML::Compile::Tester
+
 version 0.10: Tue Apr  8 23:50:35 CEST 2008
 
 	- initial version, forked from XML::Compile::SOAP development

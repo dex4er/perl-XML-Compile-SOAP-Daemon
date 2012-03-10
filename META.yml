@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                XML-Compile-SOAP-Daemon
-version:             0.10
+version:             0.11
 abstract:            Daemon handling XML-SOAP
 license:             perl
 author:              
@@ -16,7 +16,8 @@ requires:
     Test::Pod:                     1
     Time::HiRes:                   0
     XML::Compile:                  0.55
-    XML::Compile::SOAP:            0.56
+    XML::Compile::SOAP:            0.73
+    XML::Compile::Tester:          0.01
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.3.html
     version: 1.3

@@ -6,22 +6,16 @@ use warnings;
 use strict;
 
 # test environment at home: unpublished XML::Compile
-use lib '../XMLCompile/lib', '../../XMLCompile/lib';
-use lib '../XMLSOAP/lib', '../../XMLSOAP/lib';
-use lib '../LogReport/lib', '../../LogReport/lib';
+use lib '../XMLCompile/lib';
+use lib '../XMLSOAP/lib';
+use lib '../XMLTester/lib';
+use lib '../LogReport/lib';
 
 package TestTools;
 use vars '$VERSION';
-$VERSION = '0.10';
+$VERSION = '0.11';
+
 use base 'Exporter';
-
-use XML::LibXML;
-use Test::More;
-use Test::Deep   qw/cmp_deeply/;
-
-use POSIX        qw/_exit/;
-use Log::Report  qw/try/;
-use Data::Dumper qw/Dumper/;
 
 our @EXPORT = qw/
  /;

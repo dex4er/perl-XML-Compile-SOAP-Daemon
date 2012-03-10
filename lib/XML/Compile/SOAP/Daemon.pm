@@ -7,7 +7,8 @@ use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '0.10';
+$VERSION = '0.11';
+
 our @ISA;   # filled-in at new().
 
 use Log::Report 'xml-compile-soap-daemon', syntax => 'SHORT';

@@ -9,7 +9,8 @@
 
 package MyExampleCalls;
 use vars '$VERSION';
-$VERSION = '0.10';
+$VERSION = '0.11';
+
 use base qw/Exporter/;
 
 use XML::Compile::Util  qw/pack_type SCHEMA2001/;
