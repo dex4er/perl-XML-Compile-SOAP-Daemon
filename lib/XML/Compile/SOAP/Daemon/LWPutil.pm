@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::LWPutil;
 use vars '$VERSION';
-$VERSION = '3.01';
+$VERSION = '3.02';
 
 use base 'Exporter';
 
@@ -19,6 +19,8 @@ our @EXPORT = qw(
     lwp_make_response
     lwp_run_request
     lwp_wsdl_response
+    lwp_socket_init
+    lwp_http11_connection
 );
 
 use Log::Report 'xml-compile-soap-daemon';
@@ -193,6 +195,28 @@ sub lwp_action_from_header($)
     $action =~ s/["'\s]//g;  # often wrong blanks and quotes
     $action;
 }
+
+
+sub lwp_socket_init($)
+{   my $socket = shift;
+    my $http11_impl = $socket->isa('IO::Socket::SSL')
+      ? 'HTTP::Daemon::SSL' : 'HTTP::Daemon';
+
+    eval "require $http11_impl";
+    error $@ if $@;
+}
+
+
+sub lwp_http11_connection($$)
+{   my ($daemon, $client) = @_;
+    my $http11_impl = $client->isa('IO::Socket::SSL')
+      ? 'HTTP::Daemon::ClientConn::SSL' : 'HTTP::Daemon::ClientConn';
+
+    my $connection  = bless $client, $http11_impl;
+    ${*$connection}{httpd_daemon} = $daemon;
+    $connection;
+}
+
 
 #------------------------------
 

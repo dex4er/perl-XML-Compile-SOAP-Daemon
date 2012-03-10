@@ -27,6 +27,10 @@ the message (although it often can).
 
 =item B<lwp_handle_connection>(CONNECTION, OPTIONS)
 
+=item B<lwp_http11_connection>(DAEMON, SOCKET)
+
+Initialize a HTTP/1.1 connect on the client SOCKET.
+
 =item B<lwp_make_response>(REQUEST, RC, MSG, BODY, [POSTPROC])
 
 =item B<lwp_run_request>(REQUEST, HANDLER, [CONNECTION, POSTPROC])
@@ -35,6 +39,10 @@ Handle one REQUEST (HTTP::Request object), which was received from
 the CLIENT (string).  When the request has been received, the HANDLER
 is called. Returns the status, the status as text message, and the
 output as XML::LibXML::Document.
+
+=item B<lwp_socket_init>(SOCKET)
+
+Initialize LWP usage based on a created SOCKET.
 
 =item B<lwp_wsdl_response>([WSDLFILE|RESPONSE])
 
@@ -69,8 +77,8 @@ encoded into a byte string.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 3.01,
-built on February 13, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.02,
+built on March 01, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
 
 Other distributions in this suite:
 L<XML::Compile>,

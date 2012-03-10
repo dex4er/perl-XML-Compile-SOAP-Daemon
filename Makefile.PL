@@ -2,13 +2,13 @@ use ExtUtils::MakeMaker;
 
 use 5.008;
 
-my $version = '3.01';
+my $version = '3.02';
 
 my %prereq =
-  ( XML::Compile         => 1.20
+  ( XML::Compile         => 1.24
   , XML::Compile::SOAP   => 2.26
   , XML::Compile::Tester => 0.05
-  , XML::Compile::Cache  => 0.98
+  , XML::Compile::Cache  => 0.991
 
   , Log::Report     => 0.90
   , Time::HiRes     => 0
@@ -16,13 +16,21 @@ my %prereq =
 
 # Only needed when ::Daemon::NetServer is being used
 # , Net::Server     => 0.97
-# , LWP             => 5.803
+# , HTTP::Daemon    => 6.0
+# , HTTP::Message   => 6.0
 
+# Only needed when ::Daemon::AnyDaemon is being used
+# , Any::Daemon     => 0.13
+# , HTTP::Daemon    => 6.0
+# , HTTP::Message   => 6.0
+
+# Only needed when SSL is used
+# , IO::Socket::SSL   => 0
+# , HTTP::Daemon::SSL => 1.04
   );
 
 # only update WSA if installed
 eval "require XML::Compile::SOAP::WSA";
-warn $@;
 unless($@)
 {   my $v = $XML::Compile::SOAP::WSA::VERSION || '';
     $prereq{'XML::Compile::SOAP::WSA'} = 0.12;

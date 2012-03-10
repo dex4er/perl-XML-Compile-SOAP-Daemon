@@ -1,6 +1,15 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 3.02: Thu Mar  1 11:47:03 CET 2012
+
+	Improvements:
+
+	- ::Daemon::AnyDaemon::run() got a 'child_init' option.
+
+	- add SSL support to ::Daemon::NetServer and ::Daemon::AnyDaemon.  The
+	  latter man-page contains an example.
+
 version 3.01: Mon Feb 13 10:30:20 CET 2012
 
 	Improvements:

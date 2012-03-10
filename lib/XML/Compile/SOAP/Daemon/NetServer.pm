@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::NetServer;
 use vars '$VERSION';
-$VERSION = '3.01';
+$VERSION = '3.02';
 
 
 # The selected type of netserver gets added to the @ISA during new(),
@@ -17,7 +17,6 @@ our @ISA;
 
 use Log::Report 'xml-compile-soap-daemon';
 
-use HTTP::Daemon              ();
 use Time::HiRes               qw/time alarm/;
 use XML::Compile::SOAP::Util  qw/:daemon/;
 use XML::Compile::SOAP::Daemon::LWPutil;
@@ -108,6 +107,12 @@ sub post_configure()
     $self->SUPER::post_configure;
 }
 
+sub post_bind_hook()
+{   my $self = shift;
+    my $prop = $self->{server};
+    lwp_socket_init $prop->{sock};
+}
+
 sub setWsdlResponse($)
 {   my ($self, $fn) = @_;
     trace "setting wsdl response to $fn";
@@ -142,12 +147,9 @@ sub process_request()
 {   my $self = shift;
     my $prop = $self->{server};
 
-eval {
-    # Merge Net::Server behavior with HTTP::Daemon
     # Now, our connection will become a HTTP::Daemon connection
     my $old_class  = ref $prop->{client};
-    my $connection = bless $prop->{client}, 'HTTP::Daemon::ClientConn';
-    ${*$connection}{httpd_daemon} = $self;
+    my $connection = lwp_http11_connection $self, $prop->{client};
 
     eval {
         lwp_handle_connection $connection
@@ -163,8 +165,6 @@ eval {
 
     # Our connection becomes as Net::Server::Proto::TCP again
     bless $prop->{client}, $old_class;
- };
- alert $@ if $@;
     1;
 }
 

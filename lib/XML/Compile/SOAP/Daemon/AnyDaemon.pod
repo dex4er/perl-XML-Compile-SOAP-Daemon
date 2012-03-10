@@ -123,6 +123,7 @@ See L<XML::Compile::SOAP::Daemon/"Running the server">
 
  -Option         --Default
   background       <true>
+  child_init       undef
   client_maxreq    100
   client_reqbonus  0
   client_timeout   30
@@ -137,6 +138,12 @@ See L<XML::Compile::SOAP::Daemon/"Running the server">
 =over 2
 
 =item background => BOOLEAN
+
+=item child_init => CODE
+
+This CODE reference will get called by each child which gets started,
+before the "accept" waiting starts.  Ideal moment to start your
+database-connection.
 
 =item client_maxreq => NUMBER
 
@@ -231,10 +238,72 @@ See L<XML::Compile::SOAP::Daemon/"Helpers">
 
 =back
 
+=head1 DETAILS
+
+=head2 Operation handlers
+
+=head2 Returning errors
+
+=head3 Returning general errors
+
+=head3 Returning private errors
+
+=head2 AnyDaemon with SSL
+
+First, create certificates and let them be signed by a CA (or yourself)
+See F<http://devsec.org/info/ssl-cert.html> to understand this.
+
+  # generate secret private key
+  openssl genrsa -out privkey.pem 1024
+
+  # create a "certification request" (CSR)
+  openssl req -new -key privkey.pem -out certreq.csr
+
+  # send the CSR to the Certification Authority or self-sign:
+  openssl x509 -req -days 3650 -in certreq.csr -signkey privkey.pem -out newcert.pem
+
+  # publish server certificate
+  ( openssl x509 -in newcert.pem; cat privkey.pem ) > server.pem
+  ln -s server.pem `openssl x509 -hash -noout -in server.pem`.0   # dot-zero
+
+Assuming that the certificates are in 'certs/', the program looks like this:
+
+  use Log::Report;
+  use XML::Compile::SOAP::Daemon::AnyDaemon;
+  use XML::Compile::WSDL11;
+  use IO::Socket::SSL       'SSL_VERIFY_NONE';
+  use IO::Socket            'SOMAXCONN';
+
+  my $daemon = XML::Compile::SOAP::Daemon::AnyDaemon->new;
+  my $wsdl   = XML::Compile::WSDL11->new($wsdl);
+
+  my %handlers = ();
+  $daemon->operationsFromWSDL($wsdl, callbacks => \%handlers);
+
+  my $socket = IO::Socket::SSL->new
+   ( LocalHost  => 'localhost'
+   , LocalPort  => 4444
+   , Listen     => SOMAXCONN
+   , Reuse      => 1
+   , SSL_server => 1
+   , SSL_verify_mode => SSL_VERIFY_NONE
+   , SSL_key_file    => 'certs/privkey.pem'
+   , SSL_cert_file   => 'certs/server.pem'
+   ) or error __x"cannot create socket at {interface}: {err}"
+         , interface => "$host:$port"
+         , err => IO::Socket::SSL::errstr();
+
+  $daemon->run
+   ( name       => basename($0)
+   , max_childs => 1
+   , socket     => $socket
+   , child_init => \&for_instance_connect_to_db
+   )
+
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 3.01,
-built on February 13, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.02,
+built on March 01, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
 
 Other distributions in this suite:
 L<XML::Compile>,

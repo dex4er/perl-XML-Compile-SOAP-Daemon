@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::AnyDaemon;
 use vars '$VERSION';
-$VERSION = '3.01';
+$VERSION = '3.02';
 
 
 # The selected type of netserver gets added to the @ISA during new(),
@@ -19,7 +19,6 @@ use Log::Report 'xml-compile-soap-daemon';
 use Time::HiRes       qw/time alarm/;
 use Socket            qw/SOMAXCONN/;
 use IO::Socket::INET  ();
-use HTTP::Daemon      ();   # Contains HTTP::Daemon::ClientConn
 
 use XML::Compile::SOAP::Util  qw/:daemon/;
 use XML::Compile::SOAP::Daemon::LWPutil;
@@ -62,6 +61,7 @@ sub _run($)
         info __x"created socket at {interface}", interface => "$host:$port";
     }
     $self->{XCSDA_socket}    = $socket;
+    lwp_socket_init $socket;
 
     $self->{XCSDA_conn_opts} =
       { client_timeout  => ($args->{client_timeout}  ||  30)
@@ -70,8 +70,11 @@ sub _run($)
       , postprocess     => $args->{postprocess}
       };
 
+    my $child_init = $args->{child_init} || sub {};
+    my $child_task = sub {$child_init->($self); $self->accept_connections};
+
     $self->Any::Daemon::run
-      ( child_task => sub {$self->accept_connections}
+      ( child_task => $child_task
       , max_childs => ($args->{max_childs} || 10)
       , background => (exists $args->{background} ? $args->{background} : 1)
       );
@@ -83,15 +86,7 @@ sub accept_connections()
 
     while(my $client = $socket->accept)
     {   info __x"new client {remote}", remote => $client->peerhost;
-
-        # not sure whether this trick also works with IO::Socket::SSL's
-        my $old_client_class = ref $client;
-        my $connection = bless $client, 'HTTP::Daemon::ClientConn';
-        ${*$connection}{httpd_daemon} = $self;
-
-        $self->handle_connection($connection);
-
-        bless $client, $old_client_class;
+        $self->handle_connection(lwp_http11_connection $self, $client);
         $client->close;
     }
 }
