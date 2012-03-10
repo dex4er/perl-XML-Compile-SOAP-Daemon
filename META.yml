@@ -1,24 +1,32 @@
 --- #YAML:1.0
-name:                XML-Compile-SOAP-Daemon
-version:             2.02
-abstract:            Daemon handling XML-SOAP
-license:             perl
-author:              
+name:               XML-Compile-SOAP-Daemon
+version:            2.03
+abstract:           Daemon handling XML-SOAP
+author:
     - Mark Overmeer
-generated_by:        ExtUtils::MakeMaker version 6.42
-distribution_type:   module
-requires:     
-    Log::Report:                   0.22
-    LWP:                           5.803
-    Net::Server:                   0.97
-    Test::Deep:                    0.095
-    Test::More:                    0.54
-    Test::Pod:                     1
-    Time::HiRes:                   0
-    XML::Compile:                  1.01
-    XML::Compile::Cache:           0.91
-    XML::Compile::SOAP:            2.1
-    XML::Compile::Tester:          0.05
+license:            perl
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    Log::Report:          0.22
+    LWP:                  5.803
+    Net::Server:          0.97
+    Test::Deep:           0.095
+    Test::More:           0.54
+    Test::Pod:            1
+    Time::HiRes:          0
+    XML::Compile:         1.18
+    XML::Compile::Cache:  0.91
+    XML::Compile::SOAP:   2.17
+    XML::Compile::Tester:  0.05
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.56
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4

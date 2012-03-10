@@ -88,7 +88,7 @@ sub compare_answer($$$)
     is($a, $expected, $text);
 }
 
-plan tests => 18;
+plan tests => 16;
 
 ###
 ### BEGIN
@@ -126,20 +126,6 @@ required is XML
 text/plain
 
 [406] content-type seems to be text/plain, must be some XML
-__EXPECTED
-
-### XML but no soapAction
-
-my $req3 = HTTP::Request->new(POST => $uri);
-$req3->header(Content_Type => 'text/xml');
-my $ans3 = $ua->request($req3);
-
-compare_answer($ans3, <<__EXPECTED, 'not SOAP');
-417
-not SOAP
-text/plain
-
-[417] soap requires an soapAction header field
 __EXPECTED
 
 ### XML parsing fails

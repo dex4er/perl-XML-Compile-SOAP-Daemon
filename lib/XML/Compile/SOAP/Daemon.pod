@@ -15,17 +15,17 @@ XML::Compile::SOAP::Daemon - SOAP accepting server
 
  # Be warned that the daemon will be Net::Server based, which consumes
  # command-line arguments!
- my $deamon  = XML::Compile::SOAP::HTTPDaemon->new;
+ my $daemon  = XML::Compile::SOAP::HTTPDaemon->new;
 
  # daemon definitions from WSDL
  my $wsdl    = XML::Compile::WSDL11->new(...);
  $wsdl->importDefinitions(...); # more schemas
- $deamon->operationsFromWSDL($wsdl, callbacks => ...);
+ $daemon->operationsFromWSDL($wsdl, callbacks => ...);
 
  # daemon definitions added manually
  my $soap11  = XML::Compile::SOAP11::Server->new(schemas => $wsdl->schemas);
  my $handler = $soap11->compileHandler(...);
- $deamon->addHandler('getInfo', $soap11, $handler);
+ $daemon->addHandler('getInfo', $soap11, $handler);
 
  # see what is defined:
  $daemon->printIndex;
@@ -50,7 +50,7 @@ L<XML::Compile::SOAP::HTTPDaemon|XML::Compile::SOAP::HTTPDaemon>, for transport 
 
 =back
 
-The deamon can handle various kinds of SOAP protocols at the same time,
+The daemon can handle various kinds of SOAP protocols at the same time,
 when possible hidden from the user of this module.
 
 If you have a WSDL describing your procedures, then the only thing you
@@ -113,13 +113,17 @@ The character-set to be used for output documents.
 
 =head2 Running the server
 
-$obj-E<gt>B<process>(CLIENT, XMLIN)
+$obj-E<gt>B<process>(CLIENT, XMLIN, REQUEST, ACTION)
 
 =over 4
 
 The XMLIN SOAP-structured message (an XML::LibXML::Element,
 XML::LibXML::Document, or XML as string), was received from the CLIENT
 (some extension specific object).
+
+The full REQUEST is passed in, however its format depends on the
+kind of server. The ACTION parameter relates to the soapAction header
+field which may be available in some form.
 
 Returned is an XML document as answer or a protocol specific ready
 response object (usually an error object).
@@ -141,9 +145,9 @@ $obj-E<gt>B<addHandler>(NAME, SOAP, CODE)
 
 =over 4
 
-The SOAP value is C<SOAP11>, C<SOAP12>, or a SOAP server object.  The CODE
-reference is called with the incoming document (an XML::LibXML::Document)
-of the received input message.
+The SOAP value is C<SOAP11>, C<SOAP12>, or a SOAP server object or and
+SOAP Operation object.  The CODE reference is called with the incoming
+document (an XML::LibXML::Document) of the received input message.
 
 In case the handler does not understand the message, it should
 return undef.  Otherwise, it must return a correct answer message as
@@ -300,7 +304,7 @@ XML structure.  This could be a Fault, like shown in the next section.
 Please take a look at the scripts in the example directory within
 the distribution.
 
-=head3 Returning errors
+=head3 Returning general errors
 
 To have a handler return an error, leave the callback with something
 like this:
@@ -320,7 +324,7 @@ like this:
           }
        , _RETURN_CODE => 404
        , _RETURN_TEXT => 'sorry, not found'
-     };
+       };
  }
 
 Fault codes are "prefix:error-name", XML::Compile finds the right prefix
@@ -340,23 +344,43 @@ These can also be used with valid answers, not limited to errors. There
 is no clear definition how SOAP faults and HTTP return codes should work
 together for user errors.
 
+=head3 Returning private errors
+
+In a WSDL, we can specify own fault types. These defined elements descripe
+the C<detail> component of the message.
+
+To return such an error, you have to figure-out how the fault part is
+named. Often, the name simply is C<fault>.  Then, your handle has to
+return a Fault structure where the detail refers to a HASH with data
+matching the need for the fault.  Example:
+
+  return
+  +{ fault =>   # the name of the fault part, often "fault"
+       { faultcode   => pack_type(SOAP11ENV, 'Server')
+       , faultstring => 'any-ns.WentWrong'
+       , faultactor  => $soap->role
+       , detail      => { message => 'Hello, World!' }
+       }
+   };
+
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.02,
-built on February 08, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.03,
+built on September 30, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
 
 All modules in this suite:
 L<XML::Compile>,
 L<XML::Compile::SOAP>,
 L<XML::Compile::SOAP12>,
 L<XML::Compile::SOAP::Daemon>,
+L<XML::Compile::SOAP::WSA>,
 L<XML::Compile::Tester>,
 L<XML::Compile::Cache>,
 L<XML::Compile::Dumper>,
 L<XML::Compile::RPC>,
 and
 L<XML::Rewrite>,
-L<XML::ExistDB>,
+L<XML::eXistDB>,
 L<XML::LibXML::Simple>.
 
 Please post questions or ideas to the mailinglist at

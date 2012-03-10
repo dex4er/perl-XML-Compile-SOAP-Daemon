@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '2.02';
+$VERSION = '2.03';
 
 our @ISA;   # filled-in at new().
 
@@ -272,7 +272,7 @@ sub printIndex(;$)
     my $fh   = shift || \*STDOUT;
 
     foreach my $version ($self->soapVersions)
-    {   my @handlers = $self->handlers;
+    {   my @handlers = $self->handlers($version);
         @handlers or next;
 
         local $" = "\n   ";

@@ -1,6 +1,22 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 2.03: Thu Sep 30 17:30:04 CEST 2010
+
+	Fixes:
+
+	- repair ::Daemon::printIndex(). Spotted by [Robin V.]
+
+	- not not complain about missing soapAction field: apparently
+	  there are servers which can live without them.
+
+	- fix return of answer construction errors.
+
+	Improvements:
+
+	- describe how to produce private error messages in the
+	  handler.
+
 version 2.02: Mon Feb  8 19:48:31 CET 2010
 
 	Fixed:
