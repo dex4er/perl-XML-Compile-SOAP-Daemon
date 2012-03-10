@@ -7,7 +7,7 @@ use strict;
 
 package MyExampleData;
 use vars '$VERSION';
-$VERSION = '3.02';
+$VERSION = '3.03';
 
 use base 'Exporter';
 

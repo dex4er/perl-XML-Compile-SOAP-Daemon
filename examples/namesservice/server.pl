@@ -83,8 +83,8 @@ sub create_get_name_count($);
 # process them before Net::Server can get it's hand on them.
 #
 
-my $mode    = 0;
-my $pidfile = ($ENV{TMPDIR} || '/tmp') . '/server.pid';
+my $mode     = 0;
+my $pid_file = ($ENV{TMPDIR} || '/tmp') . '/server.pid';
 
 GetOptions
  # 3 ways to set the verbosity for Log::Report dispatchers
@@ -92,7 +92,7 @@ GetOptions
    'v+'        => \$mode  # -v -vv -vvv
  , 'verbose=i' => \$mode  # --verbose=2  (0..3)
  , 'mode=s'    => \$mode  # --mode=DEBUG (DEBUG,ASSERT,VERBOSE,NORMAL)
- , 'pidfn=s'   => \$pidfile
+ , 'pidfn=s'   => \$pid_file
    or die "Deamon is not started";
 
 #
@@ -104,7 +104,7 @@ GetOptions
 error __x"No filenames expected on the command-line"
     if @ARGV;
 
-my $lock = IO::File->new($pid_file, 'a');
+my $lock = IO::File->new($pid_file, 'a')
    or fault __x"Cannot open lockfile {fn}", fn => $pid_file;
 
 flock $lock, LOCK_EX|LOCK_NB

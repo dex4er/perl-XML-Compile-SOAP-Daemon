@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::NetServer;
 use vars '$VERSION';
-$VERSION = '3.02';
+$VERSION = '3.03';
 
 
 # The selected type of netserver gets added to the @ISA during new(),
@@ -110,7 +110,7 @@ sub post_configure()
 sub post_bind_hook()
 {   my $self = shift;
     my $prop = $self->{server};
-    lwp_socket_init $prop->{sock};
+    lwp_socket_init $_ for @{$prop->{sock}};
 }
 
 sub setWsdlResponse($)

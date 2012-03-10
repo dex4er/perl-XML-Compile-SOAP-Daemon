@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::LWPutil;
 use vars '$VERSION';
-$VERSION = '3.02';
+$VERSION = '3.03';
 
 use base 'Exporter';
 
@@ -199,6 +199,8 @@ sub lwp_action_from_header($)
 
 sub lwp_socket_init($)
 {   my $socket = shift;
+use Scalar::Util 'blessed';
+blessed $socket or panic $socket;
     my $http11_impl = $socket->isa('IO::Socket::SSL')
       ? 'HTTP::Daemon::SSL' : 'HTTP::Daemon';
 

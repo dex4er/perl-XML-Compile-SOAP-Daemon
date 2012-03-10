@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               XML-Compile-SOAP-Daemon
-version:            3.02
+version:            3.03
 abstract:           Daemon handling XML-SOAP
 author:
     - Mark Overmeer

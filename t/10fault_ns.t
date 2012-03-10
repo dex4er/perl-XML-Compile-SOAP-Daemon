@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Attempt to produce all errors when running Net::Server
 
 use warnings;
@@ -37,7 +37,9 @@ require_ok('LWP::UserAgent');
 
 my $daemon = XML::Compile::SOAP::Daemon::NetServer->new;
 
-my $pidfile = "soapdaemon-test-$$.pid";
+my $pidfile = "soapdaemon-test.pid";
+unlink $pidfile;
+
 my $soapenv = SOAP11ENV;
 
 unless(fork())
@@ -65,6 +67,7 @@ foreach my $attempt (1..10)
 {   if(open PID, '<', $pidfile)
     {   $daemon_pid = <PID>;
         close PID;
+        chomp $daemon_pid;
         last ATTEMPT;
     }
     sleep 1;

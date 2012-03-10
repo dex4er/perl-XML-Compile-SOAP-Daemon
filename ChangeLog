@@ -1,6 +1,16 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 3.03: Mon Mar  5 11:21:30 CET 2012
+
+	Fixes:
+
+	- syntax errors in namesservices/server.pl
+	  rt.cpan.org #75518 [Caleb Cushing]
+
+	- ::NetServer got broken.  Discovered by
+	  rt.cpan.org #75516 [Caleb Cushing]
+
 version 3.02: Thu Mar  1 11:47:03 CET 2012
 
 	Improvements:

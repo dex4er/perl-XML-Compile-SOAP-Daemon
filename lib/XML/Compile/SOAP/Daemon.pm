@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '3.02';
+$VERSION = '3.03';
 
 our @ISA;   # filled-in at new().
 
