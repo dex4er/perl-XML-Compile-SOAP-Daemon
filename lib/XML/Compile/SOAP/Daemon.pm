@@ -1,4 +1,4 @@
-# Copyrights 2007-2009 by Mark Overmeer.
+# Copyrights 2007-2010 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
 # Pod stripped from pm file by OODoc 1.06.
@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '2.01';
+$VERSION = '2.02';
 
 our @ISA;   # filled-in at new().
 
@@ -231,10 +231,7 @@ sub operationsFromWSDL($@)
         {   trace __x"add stub handler for operation `{name}'", name => $name;
             my $server  = $op->serverClass;
             my $handler = $default
-              || sub { $self->makeResponse(RC_NOT_IMPLEMENTED
-                         , 'procedure stub used'
-                         , $server->faultNotImplemented($name));
-                     };
+              || sub { $server->faultNotImplemented($name) };
 
             $code = $op->compileHandler(callback => $handler);
         }

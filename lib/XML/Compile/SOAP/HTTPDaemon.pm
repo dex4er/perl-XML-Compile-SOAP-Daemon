@@ -1,4 +1,4 @@
-# Copyrights 2007-2009 by Mark Overmeer.
+# Copyrights 2007-2010 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
 # Pod stripped from pm file by OODoc 1.06.
@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::HTTPDaemon;
 use vars '$VERSION';
-$VERSION = '2.01';
+$VERSION = '2.02';
 
 use base 'XML::Compile::SOAP::Daemon';
 
@@ -74,8 +74,9 @@ sub process_request()
         my $timeleft;
         while(($timeleft = $expires - time) > 0.01)
         {   alarm $timeleft;
-            my $request  = $connection->get_request or last;
+            my $request  = $connection->get_request;
             alarm 0;
+            $request or last;
 
             my $response = $self->runRequest($request, $connection);
             $connection->force_last_request if $maxmsgs==1;

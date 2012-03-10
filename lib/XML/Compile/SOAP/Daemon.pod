@@ -284,10 +284,66 @@ it: before the daemon is initiated. See Log::Report subroutine dispatcher.
 
 =head3 Operation handlers
 
+Per operation, you define a callback which handles the request. There can
+also be a default callback for all your operations. Besides, when an
+operation does not have a handler defined, one is created for you.
+
+ sub my_callback($$)
+ {   my ($soap, $data_in) = @_;
+
+     return $data_out;
+ }
+
+The C<$data_out> is a nested HASH which will be translated in the right
+XML structure.  This could be a Fault, like shown in the next section.
+
+Please take a look at the scripts in the example directory within
+the distribution.
+
+=head3 Returning errors
+
+To have a handler return an error, leave the callback with something
+like this:
+
+ use XML::Compile::Util        qw/pack_type/;
+
+ sub my_callback($$)
+ {   my ($soap, $data) = @_;
+
+     my $code = pack_type $my_err_ns, 'error-code';
+
+     return
+      +{ Fault =>
+          { faultcode   => $code
+          , faultstring => 'something is wrong'
+          , faultactor  => $soap->role
+          }
+       , _RETURN_CODE => 404
+       , _RETURN_TEXT => 'sorry, not found'
+     };
+ }
+
+Fault codes are "prefix:error-name", XML::Compile finds the right prefix
+based on the URI. If your error namespace is not mentioned in the WSDL or
+other loaded schemas, you should use XML::Compile::WSDL11 subroutine prefixes
+first.
+
+SOAP uses error codes in the SOAPENV namespace.  It shows whether errors
+are client or server side. This is produced like:
+
+  use XML::Compile::SOAP::Util 'SOAP11ENV';
+  $code = pack_type SOAP11ENV, 'Server.validationFailed';
+
+[release 2.02] Fields C<_RETURN_CODE> and C<_RETURN_TEXT> can be used to
+change the HTTP response (and maybe other protocol headers in the future).
+These can also be used with valid answers, not limited to errors. There
+is no clear definition how SOAP faults and HTTP return codes should work
+together for user errors.
+
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.01,
-built on February 15, 2009. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.02,
+built on February 08, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
 
 All modules in this suite:
 L<XML::Compile>,
@@ -297,8 +353,10 @@ L<XML::Compile::SOAP::Daemon>,
 L<XML::Compile::Tester>,
 L<XML::Compile::Cache>,
 L<XML::Compile::Dumper>,
-L<XML::Rewrite>,
+L<XML::Compile::RPC>,
 and
+L<XML::Rewrite>,
+L<XML::ExistDB>,
 L<XML::LibXML::Simple>.
 
 Please post questions or ideas to the mailinglist at
@@ -308,7 +366,7 @@ on C<irc.perl.org>.
 
 =head1 LICENSE
 
-Copyrights 2007-2009 by Mark Overmeer. For other contributors see ChangeLog.
+Copyrights 2007-2010 by Mark Overmeer. For other contributors see ChangeLog.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

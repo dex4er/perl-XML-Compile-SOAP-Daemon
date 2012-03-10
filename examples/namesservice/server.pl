@@ -31,6 +31,8 @@ use strict;
 use constant SERVERHOST => 'localhost';
 use constant SERVERPORT => '8877';
 
+use constant ERROR_NS   => 'http://namesservice.thomas_bayer.com/error';
+
 # To make Perl find the modules without the package being installed.
 use lib '../../lib'                 # This server implementation
       , '.';                        # To access My*.pm helpers
@@ -45,6 +47,7 @@ use MyExampleCalls;
 use XML::Compile::SOAP::HTTPDaemon;
 use XML::Compile::WSDL11;
 use XML::Compile::SOAP11;
+use XML::Compile::Util    qw/pack_type/;
 
 # The client and server scripts can be translated easily, using the
 # 'example' translation table name-space. trace/info/error come from
@@ -114,6 +117,15 @@ my $daemon = XML::Compile::SOAP::HTTPDaemon->new
 my $wsdl = XML::Compile::WSDL11->new('namesservice.wsdl');
 $wsdl->importDefinitions('namesservice.xsd');
 
+# The error namespace I use in this example is not defined in the
+# wsdl neither the xsd, so have to add it explicitly.
+$wsdl->prefixes(err => ERROR_NS);
+
+# enforce the error name-space declaration to be available in all
+# returned messages: at compile-time, it is not known that it may
+# be used... but XML::Compile handles namespaces statically.
+$wsdl->prefixFor(ERROR_NS);
+
 # This will give you some understanding about what is defined.
 #$wsdl->schemas->namespaces->printIndex;
 
@@ -121,15 +133,15 @@ $wsdl->importDefinitions('namesservice.xsd');
 # The only thing you have to do, is provide call-back code references
 # for each of the portNames in the WSDL.
 my %callbacks =
- ( getCountries       => \&get_countries
- , getNamesInCountry  => \&get_names_in_country
- , getNameInfo        => \&get_name_info
- );
+  ( getCountries       => \&get_countries
+  , getNamesInCountry  => \&get_names_in_country
+  , getNameInfo        => \&get_name_info
+  );
 
 $daemon->operationsFromWSDL
- ( $wsdl
- , callbacks => \%callbacks
- );
+  ( $wsdl
+  , callbacks => \%callbacks
+  );
 
 # Add a handler which is not defined in a WSDL
 create_get_name_count $daemon;
@@ -140,23 +152,23 @@ create_get_name_count $daemon;
 #
 
 # replace the 'default' output 'PERL' with output to syslog
-#dispatcher SYSLOG => 'default', mode => $mode;
+dispatcher SYSLOG => 'default', mode => $mode;
 
 $daemon->run
- ( 
-   # any Net::Server option.  Difference SOAP daemon extensions add extra
-   # configuration options.  It also depends on the Net::Server
-   # implementation you base the SOAP daemon on.  See new(base_on)
-   name    => 'NamesService'
- , host    => SERVERHOST
- , port    => SERVERPORT
+  ( 
+    # any Net::Server option. Difference SOAP daemon extensions add extra
+    # configuration options. It also depends on the Net::Server
+    # implementation you base the SOAP daemon on.  See new(base_on)
+    name    => 'NamesService'
+  , host    => SERVERHOST
+  , port    => SERVERPORT
 
-   # Net::Server::PreFork parameters
- , min_servers => 1
- , max_servers => 1
- , min_spare_servers => 0
- , max_spare_servers => 0
- );
+    # Net::Server::PreFork parameters
+  , min_servers => 1
+  , max_servers => 1
+  , min_spare_servers => 0
+  , max_spare_servers => 0
+  );
 
 info "Daemon stopped\n";
 exit 0;
@@ -259,7 +271,20 @@ sub get_names_in_country($$)
 
     # this should look quite familiar now... a bit more compact!
     my $country = $in->{parameters}{country} || '';
-    my $data    = $namedb->{$country} || {};
+    my $data    = $namedb->{$country};
+
+    $data or return
+     +{ Fault =>
+         { faultcode   => pack_type(ERROR_NS, 'UnknownCountry')
+         , faultstring => "No information about country '$country'"
+         }
+
+      # The next two are put in the header of HTTP responses. Can
+      # also be used in valid responses. Defaults to RC_OK.
+      , _RETURN_CODE => 404  # use HTTP codes
+      , _RETURN_TEXT => 'Country not found'
+      };
+    
     my @names   = sort @{$data->{male} || []}, @{$data->{female} || []};
     { parameters => { name => \@names } };
 }

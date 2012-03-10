@@ -63,6 +63,7 @@ sub get_countries();
 sub get_name_info();
 sub get_names_in_country();
 sub get_name_count();
+sub try_stub();
 
 #### MAIN
 
@@ -125,6 +126,7 @@ while(lc $answer ne 'q')
       2) getNameInfo
       3) getNamesInCountry
       4) getNameCount, not defined by WSDL
+      5) tryStub, in WSDL but not implemented
       Q) quit demo
 __SELECTOR
 
@@ -133,13 +135,14 @@ __SELECTOR
 __HELP
     print "\n";
 
-    $answer = $term->readline("Pick one of above [1/2/3/4/Q] ");
+    $answer = $term->readline("Pick one of above [1-5,Q] ");
     chomp $answer;
 
        if($answer eq '1') { get_countries() }
     elsif($answer eq '2') { get_name_info()  }
     elsif($answer eq '3') { get_names_in_country() }
     elsif($answer eq '4') { get_name_count() }
+    elsif($answer eq '5') { try_stub() }
     elsif(lc $answer ne 'q' && length $answer)
     {   print "Illegal choice\n";
     }
@@ -279,9 +282,10 @@ sub get_names_in_country()
     my ($answer2, $trace2) = $getNamesInCountry->(country => $name);
     show_trace $answer2, $trace2;
 
-    if($answer2->{Fault})
-    {   warning __x"cannot get names in country: {text}"
-           , text => $answer2->{Fault}{faultstring};
+    # print $trace2->response->as_string;
+    if(my $fault2 = $answer2->{Fault})
+    {   warning __x"cannot get names in country:\n  {code}\n  {text}"
+          , code => $fault2->{faultcode}, text => $fault2->{faultstring};
         return;
     }
 
@@ -347,3 +351,26 @@ sub get_name_count()
 
     print "Country $country has $answer->{answer}{count} names defined\n";
 }
+
+#
+# procedure tryStub
+# added to the WSDL by hand, to demonstrate what happens when the
+# server does not implement a procedure which is listed in the
+# interface.
+#
+
+sub try_stub()
+{   my $try_stub = $wsdl->compileClient('tryStub', transporter => $http);
+
+    my ($answer, $trace) = $try_stub->();
+
+    my $fault = $answer->{Fault}
+        or panic "should return a fault";
+
+    # print $trace->response->as_string;
+
+    print __x"the stub answers with the (expected) error:\n  {reason}\n"
+      , reason => $fault->{faultstring};
+
+}
+
