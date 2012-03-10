@@ -1,6 +1,13 @@
 
 === version history of XML::Compile::SOAP::Server
 
+version 0.12: Sun Dec 14 21:48:28 CET 2008
+
+	Fixes:
+
+	- Content-Length was handled uncorrectly [Bruno Santos]
+	  and rt.cpan.org#41695 [Frank Rothhaupt]
+
 version 0.11: Fri Jun  6 16:19:06 CEST 2008
 
 	Fixes:

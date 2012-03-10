@@ -1,13 +1,13 @@
 # Copyrights 2007-2008 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
-# Pod stripped from pm file by OODoc 1.04.
+# Pod stripped from pm file by OODoc 1.05.
 use warnings;
 use strict;
 
 package XML::Compile::SOAP::HTTPDaemon;
 use vars '$VERSION';
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 use base 'XML::Compile::SOAP::Daemon';
 
@@ -167,7 +167,7 @@ sub acceptResponse($$)
     my $resp   = HTTP::Response->new($status);
     $resp->protocol($request->protocol);  # match request
     my $s = $resp->content($xml->toString);
-    { use bytes; $self->header('Content-Length' => length $s); }
+    { use bytes; $resp->header('Content-Length' => length $s); }
     $self->headersForXML($resp);
 
     if(substr($request->method, 0, 2) eq 'M-')
@@ -182,7 +182,7 @@ sub soapFault($$$$)
     my $doc  = $self->SUPER::soapFault($version, $data);
     my $resp = HTTP::Response->new($rc, $abstract);
     my $s = $resp->content($doc->toString);
-    { use bytes; $self->header('Content-Length' => length $s); }
+    { use bytes; $resp->header('Content-Length' => length $s); }
     $self->headersForXML($resp);
     $resp;
 }
