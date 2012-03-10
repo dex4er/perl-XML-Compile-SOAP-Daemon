@@ -16,10 +16,10 @@
 # Thanks to Thomas Bayer, for providing this example service
 #    See http://www.thomas-bayer.com/names-service/
 
-# Author: Mark Overmeer, April 7 2008
-# Using:  XML::Compile               0.73
-#         XML::Compile::SOAP         0.69
-#         XML::Compile::SOAP::Daemon 0.10 (initial version)
+# Author: Mark Overmeer, January 24, 2009
+# Using:  XML::Compile               1.00
+#         XML::Compile::SOAP         2.00
+#         XML::Compile::SOAP::Daemon 2.00
 # Copyright by the Author, under the terms of Perl itself.
 # Feel invited to contribute your examples!
 
@@ -35,10 +35,6 @@ use constant SERVERPORT => '8877';
 use lib '../../lib'                 # This server implementation
       , '.';                        # To access My*.pm helpers
 
-use lib '../../../XMLCompile/lib'   # My home test environment
-      , '../../../XMLSOAP/lib'      #   please ignore all three of them
-      , '../../../LogReport/lib';
-
 # This could come from a database...
 use MyExampleData  qw/$namedb/;
 
@@ -48,6 +44,7 @@ use MyExampleCalls;
 # All the other XML modules should be automatically included.
 use XML::Compile::SOAP::HTTPDaemon;
 use XML::Compile::WSDL11;
+use XML::Compile::SOAP11;
 
 # The client and server scripts can be translated easily, using the
 # 'example' translation table name-space. trace/info/error come from
@@ -57,10 +54,11 @@ use Log::Report   'example', syntax => 'SHORT';
 # Other useful modules
 use Getopt::Long  qw/:config no_ignore_case bundling/;
 use List::Util    qw/first/;
+
 use Data::Dumper;          # Data::Dumper is your friend.
 $Data::Dumper::Indent = 1;
 
-# Forward declarations
+# Forward declarations allow prototype checking
 sub get_countries($$);
 sub get_name_info($$);
 sub get_names_in_country($$);
@@ -91,23 +89,16 @@ GetOptions
 # messages is here changed from PERL (die/warn) into using syslog.
 #
 
-dispatcher PERL => 'default', mode => $mode;
-
 # This is an example of Log::Report translation/exception syntax
 error __x"No filenames expected on the command-line"
-   if @ARGV;
+    if @ARGV;
 
 #
 # Create the daemon set-up
 #
 
 my $daemon = XML::Compile::SOAP::HTTPDaemon->new
-  ( # SOAP 1.2 not yet implemented.  The next line will may produce a
-    # "message not recognized" error.  Without this line, the daemon
-    # understands SOAP1.2 (although it cannot be used yet), and produces
-    # an "try other protocol" error in the same occasions.
-    support_soap => 'SOAP11'
-
+  ( 
     # You may wish to use other daemon implementations, for instance
     # when your platform does not have a fork.  You may also provide
     # a prepared Net::Server daemon object.
@@ -148,7 +139,8 @@ create_get_name_count $daemon;
 # All (slow) preparations done, let's start the server
 #
 
-dispatcher SYSLOG => 'default', mode => $mode;
+# replace the 'default' output 'PERL' with output to syslog
+#dispatcher SYSLOG => 'default', mode => $mode;
 
 $daemon->run
  ( 
@@ -157,6 +149,12 @@ $daemon->run
    # implementation you base the SOAP daemon on.  See new(base_on)
    name    => 'NamesService'
  , port    => SERVERPORT
+
+   # Net::Server::PreFork parameters
+ , min_servers => 1
+ , max_servers => 1
+ , min_spare_servers => 0
+ , max_spare_servers => 0
  );
 
 info "Daemon stopped\n";
@@ -202,13 +200,13 @@ sub find_name($$)
 sub get_name_info($$)
 {   my ($server, $in) = @_;
 
-    # debugging daemons is not easy, but you could do things like
-    # (debug mode is enabled by Log::Report dispatchers with -vvv
-    # on the [server] command-line.
+    # debugging daemons is not easy, but you could do things like:
+    #      (debug mode is enabled by Log::Report dispatchers with
+    #       -vvv on the [server] command-line)
     trace join '', 'get_name_info', Dumper $in;
 
     # In the message description, the getNameInfo message has only
-    # one part, named parameters.  Its structure is an optional
+    # one part, named `parameters'.  Its structure is an optional
     # name string.
     my $name = $in->{parameters}{name} || '';
 
@@ -281,16 +279,15 @@ sub create_get_name_count($)
 
     ##### BEGIN only once per script
     # I want to base my own methods on the WSDL definitions
-    my $schemas = $wsdl->schemas;
-    $schemas->importDefinitions($_) for @my_additional_schemas;
-    my $soap11 = XML::Compile::SOAP11::Server->new(schemas => $schemas);
+    $wsdl->importDefinitions(\@my_additional_schemas);
+    my $soap11 = XML::Compile::SOAP11::Server->new(schemas => $wsdl);
 
     # You could also do
     # my $soap11 = XML::Compile::SOAP11::Server->new;
     # $soap11->importDefinitions($_) for @my_additional_schemas;
     ##### END only once per script
 
-    ##### BEGIN usually in initiation phase of daemon
+    ##### BEGIN usually in initiation phase of the daemon
     # For each of the messages you want to be able to handle, you need to
     # implement this block, run before the daemon starts.
 

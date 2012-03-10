@@ -10,6 +10,8 @@ XML::Compile::SOAP::Daemon - SOAP accepting server
 =head1 SYNOPSIS
 
  #### have a look in the examples directory!
+ use XML::Compile::SOAP::HTTPDaemon;
+ use XML::Compile::SOAP11;
 
  # Be warned that the daemon will be Net::Server based, which consumes
  # command-line arguments!
@@ -77,7 +79,6 @@ is a little tricky.  Read below in the L</Configuration options> section.
  Option        --Default
  based_on        <internal Net::Server::PreFork>
  output_charset  'UTF-8'
- support_soap    'ANY'
 
 . based_on => Net::Server OBJECT|CLASS
 
@@ -98,29 +99,9 @@ The character-set to be used for the output XML document.
 
 =back
 
-. support_soap => 'SOAP11'|'SOAP12'|'ANY'|SOAP
-
-=over 4
-
-Which versions of SOAP to support.  Quite an amount of preparations
-must be made to start a server, which can be reduced by enforcing
-a single SOAP type, specified as version string or L<XML::Compile::SOAP|XML::Compile::SOAP>
-object.
-
-=back
-
 =back
 
 =head2 Attributes
-
-$obj-E<gt>B<isSupportedVersion>(('SOAP11'|'SOAP12'))
-
-=over 4
-
-Returns true if the soap version is supported, according to
-L<new(support_soap)|XML::Compile::SOAP::Daemon/"Constructors">).
-
-=back
 
 $obj-E<gt>B<outputCharset>
 
@@ -136,9 +117,12 @@ $obj-E<gt>B<process>(CLIENT, XMLIN)
 
 =over 4
 
-The parsed XMLIN SOAP-structured message (an XML::LibXML::Element or
-XML::LibXML::Document), was received from the CLIENT (some extension
-specific object).  Returned is an XML document as answer.
+The XMLIN SOAP-structured message (an XML::LibXML::Element,
+XML::LibXML::Document, or XML as string), was received from the CLIENT
+(some extension specific object).
+
+Returned is an XML document as answer or a protocol specific ready
+response object (usually an error object).
 
 =back
 
@@ -183,9 +167,9 @@ WSDLs into one server, simply by calling this method repeatedly.
 
 =over 4
 
-The keys are the port names, as defined in the WSDL.  The values are
-CODE references which are called in case a message is received which
-seems to be addressing the port (this is a guess). See L</Operation handlers>
+The keys are the port names, as defined in the WSDL.  The values are CODE
+references which are called in case a message is received which seems
+to be addressing the port (this is a guess). See L</Operation handlers>
 
 =back
 
@@ -203,29 +187,9 @@ be returned.  See L</Operation handlers>
 
 =head2 Helpers
 
-$obj-E<gt>B<acceptResponse>(REQUEST, XML)
+$obj-E<gt>B<faultInvalidXML>(ERROR)
 
 =over 4
-
-Returns an implementation dependent wrapper around a produced response.
-
-=back
-
-$obj-E<gt>B<faultMessageNotRecognized>(SOAPVERSION, BODYELEMENT, DEFINED)
-
-=over 4
-
-The SOAP VERSION, the type of the first BODY ELEMENT, and the ARRAY of
-DEFINED message names.
-
-=back
-
-$obj-E<gt>B<faultNotImplemented>(NAME, XML, INFO)
-
-=over 4
-
-Called as any handler, with the procedure NAME (probably the portType
-from the WSDL), the incoming XML message, and structural message INFO.
 
 =back
 
@@ -235,18 +199,12 @@ $obj-E<gt>B<faultNotSoapMessage>(NODETYPE)
 
 =back
 
-$obj-E<gt>B<faultTryOtherProtocol>(SOAPVERSION, BODYELEMENT, OTHER)
-
-=over 4
-
-The SOAP VERSION, the type of the first BODY ELEMENT, and an ARRAY of OTHER
-protocols are passed.
-
-=back
-
 $obj-E<gt>B<faultUnsupportedSoapVersion>(ENV_NS)
 
 =over 4
+
+Produces a text message, because we do not know how to produce
+an error in a SOAP which we do not understand.
 
 =back
 
@@ -266,14 +224,6 @@ example:
 
 =back
 
-$obj-E<gt>B<inputToXML>(CLIENT, ACTION, XML-STRING-REF)
-
-=over 4
-
-Translate a textual XML message into an XML::LibXML tree.
-
-=back
-
 $obj-E<gt>B<printIndex>([FILEHANDLE])
 
 =over 4
@@ -283,12 +233,14 @@ by default to STDOUT.
 
 =back
 
-$obj-E<gt>B<soapFault>(SOAPVERSION, DATA, [RC, ABSTRACT])
+$obj-E<gt>B<protocolError>(STATUS, STATUS_TEXT, MESSAGE)
 
 =over 4
 
-Create the fault document.  The error code (RC) is not always available,
-as is an ABSTRACT description of the problem.
+Respond to the caller that the received request does not look like
+anything we can process automatically.  The STATUS and STATUS_TEXT
+are like HTTP, but may be translated into some other transport
+protocol convension.
 
 =back
 
@@ -345,17 +297,20 @@ it: before the daemon is initiated. See Log::Report subroutine dispatcher.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 0.12,
-built on December 14, 2008. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.00,
+built on February 12, 2009. Website: F<http://perl.overmeer.net/xml-compile/>
 
 All modules in this suite:
 L<XML::Compile>,
 L<XML::Compile::SOAP>,
+L<XML::Compile::SOAP12>,
 L<XML::Compile::SOAP::Daemon>,
 L<XML::Compile::Tester>,
 L<XML::Compile::Cache>,
+L<XML::Compile::Dumper>,
 L<XML::Rewrite>,
-L<XML::Compile::Dumper>.
+and
+L<XML::LibXML::Simple>.
 
 Please post questions or ideas to the mailinglist at
 F<http://lists.scsys.co.uk/cgi-bin/mailman/listinfo/xml-compile>
@@ -364,7 +319,7 @@ on C<irc.perl.org>.
 
 =head1 LICENSE
 
-Copyrights 2007-2008 by Mark Overmeer. For other contributors see ChangeLog.
+Copyrights 2007-2009 by Mark Overmeer. For other contributors see ChangeLog.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

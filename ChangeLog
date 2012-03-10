@@ -1,5 +1,30 @@
 
-=== version history of XML::Compile::SOAP::Server
+=== version history of XML::Compile::SOAP::Daemon
+
+version 2.00: Thu Feb 12 10:18:11 CET 2009
+
+	Changes:
+
+	- Be compatible with XML::Compile::SOAP 2.00_01
+
+	- adapted examples to new interface.  Minor changes.
+
+	- removed new(support_versions) and isSupportedVersion().
+	  Simply only load the implementation you daemons want to support.
+
+	- used HTTP error codes have changed.
+
+	Fixes:
+
+	- do not require SOAP12, which got stripped from XML::Compile::SOAP
+
+	- do not use /bin/pwd in t/pod.t
+
+	- do not attempt to use SOAP11 for protocol errors.
+
+	Improvements:
+
+	- test faults in t/10faults.t
 
 version 0.12: Sun Dec 14 21:48:28 CET 2008
 

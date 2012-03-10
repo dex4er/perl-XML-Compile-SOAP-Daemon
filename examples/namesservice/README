@@ -16,7 +16,7 @@ which have been beautified a bit but nothing more.
    The Schema file, describing the data types transmitted.
 
 To run this example, first start the server
-  ./server.pl
+  ./server.pl -vvv
 
 and then run the client
   ./client.pl

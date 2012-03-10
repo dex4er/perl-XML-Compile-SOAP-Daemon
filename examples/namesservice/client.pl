@@ -11,14 +11,13 @@
 # distribution.  There, rpc-literal, rpc-encoded and shorter versions
 # are shown as well.
 
-
 # Thanks to Thomas Bayer, for providing this example service
 #    See http://www.thomas-bayer.com/names-service/
 
-# Author: Mark Overmeer, April 7 2008
-# Using:  XML::Compile               0.73
-#         XML::Compile::SOAP         0.69
-#         XML::Compile::SOAP::Daemon 0.10 (initial version)
+# Author: Mark Overmeer, Januari 24 2009
+# Using:  XML::Compile               1.00
+#         XML::Compile::SOAP         2.00
+#         XML::Compile::SOAP::Daemon 2.00
 # Copyright by the Author, under the terms of Perl itself.
 # Feel invited to contribute your examples!
 
@@ -35,25 +34,20 @@ use constant SERVERPORT => '8877';
 my $service_address = 'http://'.SERVERHOST.':'.SERVERPORT;
 
 # To make Perl find the modules without the package being installed.
-use lib '../../lib'   # clients do not need this server implementation
-      , '.';
+use lib '../../lib', '.';
 
-use lib '../../../XMLCompile/lib'   # my home test environment
-      , '../../../XMLSOAP/lib'      #    please ignore all three.
-      , '../../../LogReport/lib';
-
-# All the other XML modules will be included automatically.
+# All the used XML stuff
 use XML::Compile::WSDL11;
 use XML::Compile::Transport::SOAPHTTP;
-
-# Only needed because we implement a message outside the WSDL
-use XML::Compile::SOAP11::Client;
+use XML::Compile::SOAP11;
 
 # Other useful modules
 use Data::Dumper;          # Data::Dumper is your friend.
 $Data::Dumper::Indent = 1;
 
+# Errors are reported via Log::Report, normal user interaction not.
 use Log::Report   'example', syntax => 'SHORT';
+
 use Getopt::Long  qw/:config no_ignore_case bundling/;
 use List::Util    qw/first/;
 
@@ -85,7 +79,7 @@ GetOptions
  , 'mode=s'    => \$mode  # --mode=DEBUG (DEBUG,ASSERT,VERBOSE,NORMAL)
    or die "stopped\n";
 
-error __x"No filenames expected on the command-line"
+die "No filenames expected on the command-line"
    if @ARGV;
 
 # XML::Compile::* uses Log::Report.
@@ -115,7 +109,7 @@ my $http = $transporter->compileClient;
 #
 
 my $wsdl = XML::Compile::WSDL11->new('namesservice.wsdl');
-$wsdl->schemas->importDefinitions('namesservice.xsd');
+$wsdl->importDefinitions('namesservice.xsd');
 
 #
 # Pick one of these tests
@@ -172,7 +166,7 @@ sub show_trace($$)
 sub get_countries()
 {   my $getCountries = $wsdl->compileClient
       ( 'getCountries'
-      , transport => $http
+      , transporter => $http
       );
 
     my ($answer, $trace) = $getCountries->();
@@ -180,13 +174,14 @@ sub get_countries()
 
     if(my $fault_raw = $answer->{Fault})
     {   my $fault_nice = $answer->{$fault_raw->{_NAME}};
-        warn "Cannot get list of countries: $fault_nice->{reason}\n";
+        warning __x"Cannot get list of countries: {reason}"
+           , reason => $fault_nice->{reason};
         return;
     }
 
     my $countries = $answer->{parameters}{country} || [];
 
-    print "getCountries() lists ".scalar(@$countries)." countries:\n";
+    print "getCountries() lists ",scalar(@$countries)," countries:\n";
     foreach my $country (sort @$countries)
     {   print "   $country\n";
     }
@@ -211,8 +206,14 @@ sub get_name_info()
     my ($answer, $trace) = $getNameInfo->(name => $name);
     show_trace $answer, $trace;
 
+    unless(defined $answer)
+    {   warning __x"No answer received";
+        return;
+    }
+
     if($answer->{Fault})
-    {   warn "Lookup for '$name' failed: $answer->{Fault}{faultstring}\n";
+    {   warning __x"Lookup for '{name}' failed: {text}"
+          , name => $name, text => $answer->{Fault}{faultstring};
         return;
     }
 
@@ -248,7 +249,8 @@ sub get_names_in_country()
     show_trace $answer1, $trace1;
 
     if($answer1->{Fault})
-    {   warn "Cannot get countries: $answer1->{Fault}{faultstring}\n";
+    {   warning __x"cannot get countries: {text}"
+           , text => $answer1->{Fault}{faultstring};
         return;
     }
 
@@ -278,13 +280,14 @@ sub get_names_in_country()
     show_trace $answer2, $trace2;
 
     if($answer2->{Fault})
-    {   warn "Cannot get names in country: $answer2->{Fault}{faultstring}\n";
+    {   warning __x"cannot get names in country: {text}"
+           , text => $answer2->{Fault}{faultstring};
         return;
     }
 
     my $names    = $answer2->{parameters}{name};
     unless($names)
-    {   warn "No data available for country `$name'\n";
+    {   print "No data available for country `$name'\n";
         return;
     }
 
@@ -300,12 +303,12 @@ sub get_name_count()
 {
     ### if you execute the following lines in the initiation phase of
     # your program, you can reuse it.  For clarity of the demo, all
-    # initiations are made in this unusual spot.
+    # initiations are made on this unusual spot.
     #
     use MyExampleCalls;
-    $wsdl->importDefinitions($_) for @my_additional_schemas;
+    $wsdl->importDefinitions(\@my_additional_schemas);
 
-    my $soap11 = XML::Compile::SOAP11::Client->new(schemas => $wsdl->schemas);
+    my $soap11 = XML::Compile::SOAP11::Client->new(schemas => $wsdl);
     my $encode = $soap11->compileMessage(SENDER   => @get_name_count_input);
     my $decode = $soap11->compileMessage(RECEIVER => @get_name_count_output);
 
@@ -337,7 +340,8 @@ sub get_name_count()
     show_trace $answer, $trace;
 
     if($answer->{Fault})
-    {   warn "Cannot get names in country: $answer->{Fault}{faultstring}\n";
+    {   warning "cannot get names in country: {text}"
+           , text => $answer->{Fault}{faultstring};
         return;
     }
 

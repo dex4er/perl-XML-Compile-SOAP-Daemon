@@ -6,6 +6,7 @@ use strict;
 
 use XML::Compile::SOAP::HTTPDaemon;
 use XML::Compile::WSDL11;
+use XML::Compile::SOAP11;
 
 use Log::Report   'example', syntax => 'SHORT';
 use Getopt::Long  qw/:config no_ignore_case bundling/;
@@ -42,7 +43,7 @@ error __x"No filenames expected on the command-line"
 my $daemon = XML::Compile::SOAP::HTTPDaemon->new;
 
 my $wsdl   = XML::Compile::WSDL11->new;
-$wsdl->importDefinitions($_) for @schemas;
+$wsdl->importDefinitions(\@schemas);
 
 my %callbacks = ();
 

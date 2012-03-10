@@ -4,13 +4,13 @@ use 5.008;
 
 WriteMakefile
  ( NAME	 	=> 'XML::Compile::SOAP::Daemon'
- , VERSION	=> '0.12'
+ , VERSION	=> '2.00'
  , PREREQ_PM    =>
-   { XML::Compile         => 0.55
-   , XML::Compile::SOAP   => 0.73
-   , XML::Compile::Tester => 0.01
+   { XML::Compile         => 1.01
+   , XML::Compile::SOAP   => 2.01
+   , XML::Compile::Tester => 0.05
 
-   , Log::Report     => 0.15
+   , Log::Report     => 0.22
    , LWP             => 5.803
    , Time::HiRes     => 0
    , Net::Server     => 0.97

@@ -16,6 +16,7 @@ lib/XML/Compile/SOAP/Daemon.pod
 lib/XML/Compile/SOAP/HTTPDaemon.pm
 lib/XML/Compile/SOAP/HTTPDaemon.pod
 t/01use.t
+t/10fault.t
 t/99pod.t
 t/TestTools.pm
 META.yml                                 Module meta-data (added by MakeMaker)

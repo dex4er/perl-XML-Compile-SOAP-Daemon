@@ -1,13 +1,13 @@
-# Copyrights 2007-2008 by Mark Overmeer.
+# Copyrights 2007-2009 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
-# Pod stripped from pm file by OODoc 1.05.
+# Pod stripped from pm file by OODoc 1.06.
 use warnings;
 use strict;
 
 package XML::Compile::SOAP::HTTPDaemon;
 use vars '$VERSION';
-$VERSION = '0.12';
+$VERSION = '2.00';
 
 use base 'XML::Compile::SOAP::Daemon';
 
@@ -16,8 +16,8 @@ use Log::Report 'xml-compile-soap-daemon', syntax => 'SHORT';
 use XML::LibXML    ();
 use List::Util     qw/first/;
 use HTTP::Response ();
-use HTTP::Status   qw/RC_BAD_REQUEST RC_NOT_ACCEPTABLE
-                      RC_OK RC_UNPROCESSABLE_ENTITY/;
+use HTTP::Status   qw/RC_BAD_REQUEST RC_OK RC_METHOD_NOT_ALLOWED
+  RC_EXPECTATION_FAILED RC_NOT_ACCEPTABLE/;
 
 use HTTP::Daemon   ();
 use XML::Compile::SOAP::Util  qw/:daemon/;
@@ -67,7 +67,7 @@ sub process_request()
     my $connection = bless $prop->{client}, 'HTTP::Daemon::ClientConn';
     ${*$connection}{httpd_daemon} = $self;
 
-    local $SIG{ALRM} = sub { die "timeout" };
+    local $SIG{ALRM} = sub { die "timeout\n" };
     my $expires = time() + $prop->{client_timeout};
     my $maxmsgs = $prop->{client_maxreq};
 
@@ -79,7 +79,6 @@ sub process_request()
             alarm 0;
 
             my $response = $self->runRequest($request, $connection);
-
             $connection->force_last_request if $maxmsgs==1;
             $connection->send_response($response);
 
@@ -104,30 +103,31 @@ sub runRequest($$)
 {   my ($self, $request, $connection) = @_;
 
     my $client   = $connection->peerhost;
-    my $media    = $request->content_type || 'text/plain';
-    unless($media =~ m{[/+]xml$}i)
-    {   info __x"request from {client} request not xml but {media}"
-           , client => $client, media => $media;
-        return HTTP::Response->new(RC_BAD_REQUEST);
+    if($request->method !~ m/^(?:M-)?POST/)
+    {   return $self->protocolError(RC_METHOD_NOT_ALLOWED
+          , "only POST or M-POST"
+          , "attempt to connect via ".$request->method)
     }
 
+    my $media    = $request->content_type || 'text/plain';
+    $media =~ m{[/+]xml$}i
+        or return $self->protocolError(RC_NOT_ACCEPTABLE
+          , 'required is XML'
+          , "content-type seems to be $media, must be some XML");
+
     my $action   = $self->actionFromHeader($request);
-    unless(defined $action)
-    {   info __x"request from {client} request not soap", client => $client;
-        return HTTP::Response->new(RC_BAD_REQUEST);;
-    }
+    defined $action
+        or return $self->protocolError(RC_EXPECTATION_FAILED
+          , 'not SOAP'
+          , "soap requires an soapAction header field");
 
     my $ct       = $request->header('Content-Type');
     my $charset  = $ct =~ m/\;\s*type\=(["']?)([\w-]*)\1/ ? $2: 'utf-8';
+    my $xmlin    = $request->decoded_content(charset => $charset, ref => 1);
+    my $xmlout   = $self->process($xmlin);
 
-    my $text     = $request->decoded_content(charset => $charset, ref => 1);
-
-    my $input    = $self->inputToXML($client, $action, $text)
-        or return HTTP::Response->new(RC_NOT_ACCEPTABLE);
-
-    my $response  = $self->process($request, $input);
-
-    $response;
+      UNIVERSAL::isa($xmlout, 'HTTP::Response') ? $xmlout
+    : $self->acceptResponse($request, RC_OK, $xmlout);
 }
 
 
@@ -156,17 +156,13 @@ sub actionFromHeader($)
     :                               '';
 }
 
-sub acceptResponse($$)
-{   my ($self, $request, $output) = @_;
-    my $xml    = $self->SUPER::acceptResponse($request, $output)
-        or return;
+sub acceptResponse($$$)
+{   my ($self, $request, $status, $xmlout) = @_;
 
-    my $status = $xml->find('/Envelope/Body/Fault')
-               ? RC_UNPROCESSABLE_ENTITY : RC_OK;
-
-    my $resp   = HTTP::Response->new($status);
+    my $resp = HTTP::Response->new($status);
     $resp->protocol($request->protocol);  # match request
-    my $s = $resp->content($xml->toString);
+    my $s    = $xmlout->toString;
+    $resp->content_ref(\$s);
     { use bytes; $resp->header('Content-Length' => length $s); }
     $self->headersForXML($resp);
 
@@ -174,18 +170,27 @@ sub acceptResponse($$)
     {   # HTTP extension framework.  More needed?
         $resp->header(Ext => '');
     }
+
     $resp;
 }
 
-sub soapFault($$$$)
-{   my ($self, $version, $data, $rc, $abstract) = @_;
-    my $doc  = $self->SUPER::soapFault($version, $data);
+sub soapFault($$$)
+{   my ($self, $rc, $abstract, $xml) = @_;
     my $resp = HTTP::Response->new($rc, $abstract);
-    my $s = $resp->content($doc->toString);
+    my $s    = $resp->content($xml->toString(1));
     { use bytes; $resp->header('Content-Length' => length $s); }
     $self->headersForXML($resp);
     $resp;
 }
 
+sub protocolError($$$)
+{   my ($self, $rc, $abstract, $text) = @_;
+    $self->SUPER::protocolError($rc, $abstract, $text);
+    my $resp = HTTP::Response->new($rc, $abstract, [], $text);
+    $self->headers($resp);
+    $resp->header(Content_Type => 'text/plain');
+    $resp;
+}
+    
 
 1;
