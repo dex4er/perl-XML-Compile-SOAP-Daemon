@@ -1,6 +1,21 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 2.05: Mon Dec 13 15:37:11 CET 2010
+
+	Fixes:
+
+	- correct use of soapAction selector [Patrick Powell]
+
+	Improvements:
+
+	- HTTPDaemon::runRequest does not require a 'connection'
+	  anymore [Patrick Powell]
+
+	- update ::WSA to at least version 0.12 if it is installed.
+
+	- textual improvements by [Patrick Powell]
+
 version 2.04; Mon Nov  1 17:21:38 CET 2010
 
 	Improvements:

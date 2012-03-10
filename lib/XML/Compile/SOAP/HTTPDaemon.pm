@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::HTTPDaemon;
 use vars '$VERSION';
-$VERSION = '2.04';
+$VERSION = '2.05';
 
 use base 'XML::Compile::SOAP::Daemon';
 
@@ -99,10 +99,10 @@ sub url() { "url replacement not yet implemented" }
 sub product_tokens() { shift->{prop}{name} }
 
 
-sub runRequest($$)
+sub runRequest($;$)
 {   my ($self, $request, $connection) = @_;
 
-    my $client   = $connection->peerhost;
+#   my $client   = $connection->peerhost;
     if($request->method !~ m/^(?:M-)?POST/)
     {   return $self->makeResponse($request, RC_METHOD_NOT_ALLOWED
           , "only POST or M-POST"

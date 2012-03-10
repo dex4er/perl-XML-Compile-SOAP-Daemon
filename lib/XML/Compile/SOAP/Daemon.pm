@@ -7,7 +7,7 @@ use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '2.04';
+$VERSION = '2.05';
 
 our @ISA;   # filled-in at new().
 
@@ -229,7 +229,7 @@ sub process($)
     # Try to resolve operation via soapAction
     my $sa = $self->{sa_input_rev};
     if(defined $soapaction && $soapaction =~ m/^\s*(["'])?(.+)\1\s*$/)
-    {   if(my $name = $sa->{$1})
+    {   if(my $name = $sa->{$2})
         {   my $handler = $handlers->{$name};
             local $info->{selected_by} = 'soap-action';
             my ($rc, $msg, $xmlout) = $handler->($name, $xmlin, $info);

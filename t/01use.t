@@ -16,6 +16,7 @@ my @show_versions =
     XML::Compile::SOAP
     XML::Compile::Cache
     XML::Compile::Tester
+    XML::Compile::SOAP::WSA
     XML::LibXML
     Net::Server
     LWP

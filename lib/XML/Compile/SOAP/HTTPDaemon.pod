@@ -111,7 +111,7 @@ $obj-E<gt>B<makeResponse>(REQUEST, RC, MSG, BODY)
 
 =back
 
-$obj-E<gt>B<runRequest>(REQUEST, CONNECTION)
+$obj-E<gt>B<runRequest>(REQUEST, [CONNECTION])
 
 =over 4
 
@@ -213,10 +213,10 @@ The C<name> is included in the reply messages.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 2.04,
-built on November 01, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 2.05,
+built on December 13, 2010. Website: F<http://perl.overmeer.net/xml-compile/>
 
-All modules in this suite:
+Other distributions in this suite:
 L<XML::Compile>,
 L<XML::Compile::SOAP>,
 L<XML::Compile::SOAP12>,
@@ -226,14 +226,14 @@ L<XML::Compile::Tester>,
 L<XML::Compile::Cache>,
 L<XML::Compile::Dumper>,
 L<XML::Compile::RPC>,
-and
 L<XML::Rewrite>,
 L<XML::eXistDB>,
+and
 L<XML::LibXML::Simple>.
 
 Please post questions or ideas to the mailinglist at
 F<http://lists.scsys.co.uk/cgi-bin/mailman/listinfo/xml-compile>
-For life contact with other developers, visit the C<#xml-compile> channel
+For live contact with other developers, visit the C<#xml-compile> channel
 on C<irc.perl.org>.
 
 =head1 LICENSE
