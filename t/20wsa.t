@@ -5,8 +5,6 @@
 use warnings;
 use strict;
 
-use lib 'lib','t';
-
 #use Data::Dumper;
 #$Data::Dumper::Indent = 1;
 
@@ -16,21 +14,29 @@ use XML::Compile::Util        qw/SCHEMA2001/;
 use XML::Compile::WSDL11;
 use XML::Compile::SOAP11;
 use XML::Compile::Transport::SOAPHTTP;
-use XML::Compile::SOAP::HTTPDaemon;
 use XML::Compile::Tester;
-
 use Test::More;
 
-BEGIN {
+BEGIN
+{   eval "require Net::Server";
+    my $has_net_server = $@ ? 0 : 1;
+
+    eval "require LWP";
+    my $has_lwp = $@ ? 0 : 1;
+
+    plan skip_all => "Net::Server and LWP are need"
+        unless $has_net_server && $has_lwp;
+
     eval "require XML::Compile::SOAP::WSA";
     $@ && plan skip_all => "XML::Compile::SOAP::WSA not installed";
 
     eval "require XML::Compile::SOAP::WSA::Util";
     XML::Compile::SOAP::WSA::Util->import(qw/WSDL11WSAW WSA10/);
 
-    plan tests => 9;
 }
 
+plan tests => 10;
+require_ok('XML::Compile::SOAP::Daemon::NetServer');
 
 my $SchemaNS = SCHEMA2001;
 
@@ -101,7 +107,7 @@ __WSDL
 my $wsa    = XML::Compile::SOAP::WSA->new(version => '1.0');
 my $wsdl   = XML::Compile::WSDL11->new($xml_wsdl);
 
-my $daemon = XML::Compile::SOAP::HTTPDaemon->new
+my $daemon = XML::Compile::SOAP::Daemon::NetServer->new
   ( accept_slow_select => 0
   );
 

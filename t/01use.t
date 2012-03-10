@@ -3,9 +3,7 @@
 use warnings;
 use strict;
 
-use lib 'lib', 't';
 use Test::More tests => 2;
-use TestTools;
 
 # The versions of the following packages are reported to help understanding
 # the environment in which the tests are run.  This is certainly not a
@@ -37,4 +35,16 @@ foreach my $package (@show_versions)
 warn "libxml2 ".XML::LibXML::LIBXML_DOTTED_VERSION()."\n";
 
 require_ok('XML::Compile::SOAP::Daemon');
-require_ok('XML::Compile::SOAP::HTTPDaemon');
+
+eval "require Net::Server";
+my $has_net_server = $@ ? 0 : 1;
+
+eval "require LWP";
+my $has_lwp = $@ ? 0 : 1;
+
+if($has_net_server && $has_lwp)
+{   require_ok('XML::Compile::SOAP::Daemon::NetServer');
+}
+else
+{   ok(1, 'Net::Server not installed');
+}

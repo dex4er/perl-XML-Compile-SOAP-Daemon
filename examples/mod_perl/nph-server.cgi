@@ -1,45 +1,22 @@
 #!/usr/bin/perl
-# Example of a SOAP server.
-# Run like this:
-#     ./server.pl --verbose=2   (optional, or use -v/-vv/-vvv)
-#                 # this will start a server in the background
-#
-#     ./client.pl --verbose=2   (optional, or use -v/-vv/-vvv)
-#                 # inter-actively call procedures on the server
-#
-# If you process the four examples in order, you will see increasingly
-# complex examples.  The last example demonstrates what to do without
-# WSDL file (or in case of too many bugs in the definition, not uncommon).
-#
-# ./servtempl.pl is an empty base, to start your own server
-
-# Thanks to Thomas Bayer, for providing this example service
-#    See http://www.thomas-bayer.com/names-service/
-
-# Author: Mark Overmeer, January 24, 2009
-# Using:  XML::Compile               1.00
-#         XML::Compile::SOAP         2.00
-#         XML::Compile::SOAP::Daemon 2.00
-# Copyright by the Author, under the terms of Perl itself.
-# Feel invited to contribute your examples!
-
-# Of course, all Perl programs start like this!
 use warnings;
 use strict;
 
+#### See README
+
+# XXX package MyServer;
+# XXX 
+# XXX use Exporter;
+# XXX @ISA = qw(Exporter);
+# XXX @EXPORT = qw( runCgiRequest );
+
+use CGI;
+
+my $schemas = "/usr/local/www/SOAP";
+
 # constants, change this if needed (also in the client script?)
-my $serverhost = 'localhost';
-my $serverport = '8877';
 
-# To make Perl find the modules without the package being installed.
-use lib '../../lib'   # The server implementation, not installed
-      , '.';          # To access My*.pm helpers
-
-my $wsdl_filename = 'namesservice.wsdl';
-my @more_schemas  = 'namesservice.xsd';
-
-# useful to make constants (or vars) for namespaces
-use constant ERROR_NS  => 'http://namesservice.thomas_bayer.com/error';
+use constant ERROR_NS   => 'http://namesservice.thomas_bayer.com/error';
 
 # This could come from a database...
 use MyExampleData  qw/$namedb/;
@@ -47,7 +24,7 @@ use MyExampleData  qw/$namedb/;
 # This module defines my additional (non-WSDL) calls
 use MyExampleCalls;
 
-# Some other XML modules are automatically included.
+# All the other XML modules should be automatically included.
 use XML::Compile::SOAP::Daemon::NetServer;
 use XML::Compile::WSDL11;
 use XML::Compile::SOAP11;
@@ -56,7 +33,6 @@ use XML::Compile::Util    qw/pack_type/;
 # The client and server scripts can be translated easily, using the
 # 'example' translation table name-space. trace/info/error come from
 # the LogReport error dispatch infra-structure.
-use Log::Report   'example', syntax => 'SHORT';
 
 # Other useful modules
 use Getopt::Long  qw/:config no_ignore_case bundling/;
@@ -81,7 +57,7 @@ sub create_get_name_count($);
 # process them before Net::Server can get it's hand on them.
 #
 
-my $mode = 0;
+my $mode = 'DEBUG';
 
 GetOptions
  # 3 ways to set the verbosity for Log::Report dispatchers
@@ -100,29 +76,16 @@ GetOptions
 error __x"No filenames expected on the command-line"
     if @ARGV;
 
+use Log::Report 'example';
+dispatcher FILE => 'log', mode => $mode, to => '/tmp/soap';
+
 #
 # Create the daemon set-up
 #
 
-my $daemon = XML::Compile::SOAP::Daemon::NetServer->new
-  ( 
-    # You may wish to use other daemon implementations, for instance
-    # when your platform does not have a fork.  You may also provide
-    # a prepared Net::Server daemon object.
-# , based_on     => 'Net::Server::PreFork'  # is default
-  );
-
-#
-# Get the WSDL and Schema definitions
-#
-
-# Of course, you find this information in the applicable manual pages of
-# the XML-Compile-SOAP distributions.
-my $wsdl = XML::Compile::WSDL11->new($wsdl_filename);
-
-# Some WSDLs import or include external schemas. In XML::Compile, you
-# have to pass them explicitly. Single SCALAR or ARRAY.
-$wsdl->importDefinitions(\@more_schemas);
+our $daemon = XML::Compile::SOAP::Daemon::CGI->new;
+my $wsdl = XML::Compile::WSDL11->new("$schemas/namesservice.wsdl");
+$wsdl->importDefinitions("$schemas/namesservice.xsd");
 
 # The error namespace I use in this example is not defined in the
 # wsdl neither the xsd, so have to add it explicitly.
@@ -150,39 +113,19 @@ $daemon->operationsFromWSDL
   , callbacks => \%callbacks
   );
 
-$daemon->setWsdlResponse($wsdl_filename);
-
 # Add a handler which is not defined in a WSDL
 create_get_name_count $daemon;
 
-#
-# Start the daemon
-# All (slow) preparations done, let's start the server
-#
+##########
+########## NPH START
+########## 
 
-# replace the 'default' output 'PERL' with output to syslog
-dispatcher SYSLOG => 'default', mode => $mode;
-
-print "Staring daemon on $serverhost:$serverport\n";
-
-$daemon->run
-  ( 
-    # any Net::Server option. Difference SOAP daemon extensions add extra
-    # configuration options. It also depends on the Net::Server
-    # implementation you base the SOAP daemon on.  See new(base_on)
-    name    => 'NamesService'
-  , host    => $serverhost
-  , port    => $serverport
-
-    # Net::Server::PreFork parameters
-  , min_servers => 1
-  , max_servers => 1
-  , min_spare_servers => 0
-  , max_spare_servers => 0
-  );
-
-info "Daemon stopped\n";
+$daemon->runCgiRequest(CGI->new);;
 exit 0;
+
+##########
+########## NPH END
+##########
 
 ##
 ### Server-side implementations of the operations
@@ -372,3 +315,5 @@ sub get_name_count($$)
 
     {answer => {count => $count}};
 }
+
+1;

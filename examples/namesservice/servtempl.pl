@@ -4,7 +4,7 @@
 use warnings;
 use strict;
 
-use XML::Compile::SOAP::HTTPDaemon;
+use XML::Compile::SOAP::Daemon::NetServer;
 use XML::Compile::WSDL11;
 use XML::Compile::SOAP11;
 
@@ -19,7 +19,8 @@ use constant SERVERNAME => 'my-first-server v0.1';
 use constant SERVERHOST => 'localhost';
 use constant SERVERPORT => '8877';
 
-my @schemas = ('namesservice.wsdl', 'namesservice.xsd');
+my $wsdl_fn = 'namesservice.wsdl'
+my @schemas = ('namesservice.xsd');
 
 # Forward declarations
 
@@ -41,14 +42,15 @@ dispatcher PERL => 'default', mode => $mode;
 error __x"No filenames expected on the command-line"
    if @ARGV;
 
-my $daemon = XML::Compile::SOAP::HTTPDaemon->new;
+my $daemon = XML::Compile::SOAP::Daemon::NetServer->new;
 
-my $wsdl   = XML::Compile::WSDL11->new;
+my $wsdl   = XML::Compile::WSDL11->new($wsdl_fn);
 $wsdl->importDefinitions(\@schemas);
 
 my %callbacks = ();
 
 $daemon->operationsFromWSDL($wsdl, callbacks => \%callbacks);
+$daemon->setWsdlResponse($wsdl_fn);
 
 # as daemon, replace Perl default by syslog for output
 dispatcher SYSLOG => 'default', mode => $mode;

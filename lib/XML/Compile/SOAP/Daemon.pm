@@ -1,89 +1,51 @@
-# Copyrights 2007-2010 by Mark Overmeer.
+# Copyrights 2007-2011 by Mark Overmeer.
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
-# Pod stripped from pm file by OODoc 1.06.
+# Pod stripped from pm file by OODoc 2.00.
 use warnings;
 use strict;
 
 package XML::Compile::SOAP::Daemon;
 use vars '$VERSION';
-$VERSION = '2.06';
+$VERSION = '3.00';
 
 our @ISA;   # filled-in at new().
 
-use Log::Report 'xml-compile-soap-daemon', syntax => 'SHORT';
+use Log::Report 'xml-compile-soap-daemon';
 dispatcher SYSLOG => 'default';
 
 use XML::LibXML        ();
 use XML::Compile::Util qw/type_of_node/;
+use XML::Compile::SOAP ();
 
-use List::Util         qw/first/;
-use Time::HiRes        qw/time/;
-
-# we use HTTP status definitions for each soap protocol
-use HTTP::Status       qw/RC_FORBIDDEN RC_NOT_IMPLEMENTED
-  RC_SEE_OTHER RC_NOT_ACCEPTABLE RC_UNPROCESSABLE_ENTITY
-  RC_NOT_IMPLEMENTED RC_NOT_FOUND/;
-
-# Net::Server error levels to Log::Report levels
-my @levelToReason = qw/ERROR WARNING NOTICE INFO TRACE/;
+# We use HTTP status definitions for each soap protocol, but HTTP::Status
+# may not be installed.
+use constant
+  { RC_SEE_OTHER            => 303
+  , RC_FORBIDDEN            => 403
+  , RC_NOT_FOUND            => 404
+  , RC_UNPROCESSABLE_ENTITY => 422
+  , RC_NOT_IMPLEMENTED      => 501
+  };
 
 my $parser        = XML::LibXML->new;
 
 
-sub default_values()
-{   my $self  = shift;
-    my $def   = $self->SUPER::default_values;
-    my %mydef =
-     ( # changed defaults
-       setsid => 1, background => 1, log_file => 'Log::Report'
-
-       # make in-code defaults explicit, Net::Server 0.97
-       # see http://rt.cpan.org//Ticket/Display.html?id=32226
-     , log_level => 2, syslog_ident => 'net_server', syslog_logsock => 'unix'
-     , syslog_facility => 'daemon', syslog_logopt => 'pid'
-     );
-   @$def{keys %mydef} = values %mydef;
-   $def;
-}
-
-#-------------------------------------
-
-
-sub new(@)  # not called by HTTPDaemon
-{   my ($class, %args) = @_;
-
-    # Use a Net::Server as base object
-
-    my $daemon = delete $args{based_on} || 'Net::Server::PreFork';
-    unless(ref $daemon)
-    {   eval "require $daemon";
-        $@ and error __x"failed to compile Net::Server class {class}, {error}"
-           , class => $daemon, error => $@;
-
-        my %options;
-        $daemon = $daemon->new;
-    }
-
-    $daemon->isa('Net::Server')
-        or error __x"The daemon is not a Net::Server, but {class}"
-             , class => ref $daemon;
-
-    # Upgrade daemon, wow Perl!
-    @ISA = ref $daemon;
-    my $self = (bless $daemon, $class)->init(\%args);
-
-    $self->{accept_slow_select}
-      = exists $args{accept_slow_select} ? $args{accept_slow_select} : 1; 
-
-    $self->addWsaTable(INPUT  => $args{wsa_action_input});
-    $self->addWsaTable(OUTPUT => $args{wsa_action_output});
-    $self->addSoapAction($args{soap_action_input});
-    $self;
+sub new(@)
+{   my $class = shift;
+    $class ne __PACKAGE__
+        or error __x"you can only use extensions of {pkg}", pkg => __PACKAGE__;
+    (bless {}, $class)->init( {@_} );
 }
 
 sub init($)
 {   my ($self, $args) = @_;
+    $self->{accept_slow_select}
+      = exists $args->{accept_slow_select} ? $args->{accept_slow_select} : 1; 
+
+    $self->addWsaTable(INPUT  => $args->{wsa_action_input});
+    $self->addWsaTable(OUTPUT => $args->{wsa_action_output});
+    $self->addSoapAction($args->{soap_action_input});
 
     if(my $support = delete $args->{support_soap})
     {   # simply only load the protocol versions you want to accept.
@@ -98,47 +60,6 @@ sub init($)
     $self->{handler}        = {};
     $self;
 }
-
-sub post_configure()
-{   my $self = shift;
-    my $prop = $self->{server};
-
-    # Change the way messages are logged
-
-    my $loglevel = $prop->{log_level};
-    my $reasons  = ($levelToReason[$loglevel] || 'NOTICE') . '-';
-
-    my $logger   = delete $prop->{log_file};
-    if($logger eq 'Log::Report')
-    {   # dispatching already initialized
-    }
-    elsif($logger eq 'Sys::Syslog')
-    {   dispatcher SYSLOG => 'default'
-          , accept    => $reasons
-          , identity  => $prop->{syslog_ident}
-          , logsocket => $prop->{syslog_logsock}
-          , facility  => $prop->{syslog_facility}
-          , flags     => $prop->{syslog_logopt}
-    }
-    else
-    {   dispatcher FILE => 'default', to => $logger;
-    }
-
-    $self->SUPER::post_configure;
-}
-
-# Overrule Net::Server's log() to translate it into Log::Report calls
-sub log($$@)
-{   my ($self, $level, $msg) = (shift, shift, shift);
-    $msg = sprintf $msg, @_ if @_;
-    $msg =~ s/\n$//g;  # some log lines have a trailing newline
-
-    my $reason = $levelToReason[$level] or return;
-    report $reason => $msg;
-}
-
-# use Log::Report for hooks
-sub write_to_log_hook { panic "write_to_log_hook cannot be used" }
 
 
 sub outputCharset() {shift->{output_charset}}
@@ -172,14 +93,11 @@ sub addSoapAction(@)
 
 sub run(@)
 {   my ($self, %args) = @_;
-    delete $args{log_file};      # Net::Server should not mess with my preps
-    $args{no_client_stdout} = 1; # it's a daemon, you know
-
     notice __x"WSA module loaded, but not used"
         if XML::Compile::SOAP::WSA->can('new') && !keys %{$self->{wsa_input}};
 
     $self->{wsa_input_rev}  = +{ reverse %{$self->{wsa_input}} };
-    $self->SUPER::run(%args);
+    $self->_run(\%args);
 }
 
 
@@ -334,6 +252,12 @@ sub addHandler($$$)
 
     my $version = ref $soap ? $soap->version : $soap;
     $self->{handler}{$version}{$name} = $code;
+}
+
+
+sub setWsdlResponse($)
+{   my ($self, $filename) = @_;
+    panic "not implemented by backend {pkg}", pkg => (ref $self || $self);
 }
 
 

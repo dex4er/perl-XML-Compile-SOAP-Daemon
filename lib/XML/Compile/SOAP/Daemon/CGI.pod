@@ -1,0 +1,193 @@
+=head1 NAME
+
+XML::Compile::SOAP::Daemon::CGI - CGI based server
+
+=head1 INHERITANCE
+
+ XML::Compile::SOAP::Daemon::CGI
+   is a XML::Compile::SOAP::Daemon
+
+=head1 SYNOPSIS
+
+ #### have a look in the examples directory!
+ use XML::Compile::SOAP::Daemon::CGI;
+ my $daemon  = XML::Compile::SOAP::Daemon::CGI->new;
+
+ # daemon definitions from WSDL
+ my $wsdl    = XML::Compile::WSDL11->new(...);
+ $wsdl->importDefinitions(...); # more schemas
+ $daemon->operationsFromWSDL($wsdl, callbacks => ...);
+
+=head1 DESCRIPTION
+
+This module handles the exchange of SOAP messages via Apache, using
+the popular Perl module CGI.
+
+This abstraction level of the object (code in this pm file) is not
+concerned with parsing or composing XML, but only worries about the
+HTTP transport specifics of SOAP messages.
+
+=head1 METHODS
+
+=head2 Constructors
+
+=over 4
+
+=item XML::Compile::SOAP::Daemon::CGI-E<gt>B<new>(OPTIONS)
+
+ -Option            --Defined in     --Default
+  accept_slow_select  XML::Compile::SOAP::Daemon  <true>
+  output_charset      XML::Compile::SOAP::Daemon  'UTF-8'
+  soap_action_input   XML::Compile::SOAP::Daemon  {}
+  wsa_action_input    XML::Compile::SOAP::Daemon  {}
+  wsa_action_output   XML::Compile::SOAP::Daemon  {}
+
+=over 2
+
+=item accept_slow_select => BOOLEAN
+
+=item output_charset => STRING
+
+=item soap_action_input => HASH|ARRAY
+
+=item wsa_action_input => HASH|ARRAY
+
+=item wsa_action_output => HASH|ARRAY
+
+=back
+
+=back
+
+=head2 Attributes
+
+=over 4
+
+=item $obj-E<gt>B<addSoapAction>(HASH|PAIRS)
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=item $obj-E<gt>B<addWsaTable>(('INPUT'|'OUTPUT'), [HASH|PAIRS])
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=item $obj-E<gt>B<outputCharset>
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=back
+
+=head2 Running the server
+
+=over 4
+
+=item $obj-E<gt>B<process>(CLIENT, XMLIN, REQUEST, ACTION)
+
+See L<XML::Compile::SOAP::Daemon/"Running the server">
+
+=item $obj-E<gt>B<run>(OPTIONS)
+
+=back
+
+=head2 Preparations
+
+=over 4
+
+=item $obj-E<gt>B<addHandler>(NAME, SOAP, CODE)
+
+See L<XML::Compile::SOAP::Daemon/"Preparations">
+
+=item $obj-E<gt>B<operationsFromWSDL>(WSDL, OPTIONS)
+
+See L<XML::Compile::SOAP::Daemon/"Preparations">
+
+=item $obj-E<gt>B<setWsdlResponse>(FILENAME)
+
+See L<XML::Compile::SOAP::Daemon/"Preparations">
+
+=back
+
+=head2 Helpers
+
+=over 4
+
+=item $obj-E<gt>B<faultInvalidXML>(ERROR)
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<faultNotSoapMessage>(NODETYPE)
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<faultUnsupportedSoapVersion>(ENV_NS)
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<handlers>(('SOAP11'|'SOAP12'|SOAP))
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<printIndex>([FILEHANDLE])
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<soapVersions>
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=back
+
+=head1 DETAILS
+
+=head2 Operation handlers
+
+=head2 Returning errors
+
+=head3 Returning general errors
+
+=head3 Returning private errors
+
+=head2 How to use this CGI module
+
+=head3 Configuring
+
+Go to the F<examples/mod_perl/> directory which is included in
+the distribution of this module, L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon>.
+There you find a README describing the process.
+
+The code and documentation for this module was contributed by Patrick
+Powell in December 2010. Both have seen major changes since.
+
+=head1 SEE ALSO
+
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.00,
+built on April 15, 2011. Website: F<http://perl.overmeer.net/xml-compile/>
+
+Other distributions in this suite:
+L<XML::Compile>,
+L<XML::Compile::SOAP>,
+L<XML::Compile::SOAP12>,
+L<XML::Compile::SOAP::Daemon>,
+L<XML::Compile::SOAP::WSA>,
+L<XML::Compile::SOAP::WSS>,
+L<XML::Compile::Tester>,
+L<XML::Compile::Cache>,
+L<XML::Compile::Dumper>,
+L<XML::Compile::RPC>,
+L<XML::Rewrite>,
+L<XML::eXistDB>,
+and
+L<XML::LibXML::Simple>.
+
+Please post questions or ideas to the mailinglist at
+F<http://lists.scsys.co.uk/cgi-bin/mailman/listinfo/xml-compile>
+For live contact with other developers, visit the C<#xml-compile> channel
+on C<irc.perl.org>.
+
+=head1 LICENSE
+
+Copyrights 2007-2011 by Mark Overmeer. For other contributors see ChangeLog.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+See F<http://www.perl.com/perl/misc/Artistic.html>
+

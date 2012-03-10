@@ -4,27 +4,38 @@
 use warnings;
 use strict;
 
-use lib 'lib', '../lib';
-
 use Test::More;
+use XML::Compile::WSDL11;
+use XML::Compile::SOAP11;
+use XML::Compile::SOAP::Util ':soap11';
+
+use HTTP::Request;
+
+BEGIN
+{   eval "require Net::Server";
+    my $has_net_server = $@ ? 0 : 1;
+
+    eval "require LWP";
+    my $has_lwp = $@ ? 0 : 1;
+
+    plan skip_all => "Net::Server and LWP are need"
+        unless $has_net_server && $has_lwp;
+
+    plan skip_all => "Please contribute by porting tests to Windows"
+       if $^O eq 'MSWin32';
+}
 
 use constant
  { SERVERHOST => 'localhost'
  , SERVERPORT => 8876
  };
 
-use XML::Compile::SOAP::HTTPDaemon;
-use XML::Compile::WSDL11;
-use XML::Compile::SOAP11;
-use XML::Compile::SOAP::Util ':soap11';
+plan tests => 18;
 
-use LWP::UserAgent;
-use HTTP::Request;
+require_ok('XML::Compile::SOAP::Daemon::NetServer');
+require_ok('LWP::UserAgent');
 
-plan skip_all => "Please contribute by porting tests to Windows"
-   if $^O eq 'MSWin32';
-
-my $daemon = XML::Compile::SOAP::HTTPDaemon->new;
+my $daemon = XML::Compile::SOAP::Daemon::NetServer->new;
 
 my $pidfile = "soapdaemon-test-$$.pid";
 my $soapenv = SOAP11ENV;
@@ -88,14 +99,12 @@ sub compare_answer($$$)
     is($a, $expected, $text);
 }
 
-plan tests => 16;
-
 ###
 ### BEGIN
 ###
 
 ok(1, "Started daemon $daemon_pid");
-isa_ok($daemon, 'XML::Compile::SOAP::HTTPDaemon');
+isa_ok($daemon, 'XML::Compile::SOAP::Daemon::NetServer');
 
 my $ua = LWP::UserAgent->new;
 isa_ok($ua, 'LWP::UserAgent');

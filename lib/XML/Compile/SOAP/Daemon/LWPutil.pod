@@ -1,0 +1,74 @@
+=head1 NAME
+
+XML::Compile::SOAP::Daemon::LWPutil - LWP helper routines
+
+=head1 INHERITANCE
+
+ XML::Compile::SOAP::Daemon::LWPutil
+   is a Exporter
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item B<lwp_action_from_header>(REQUEST)
+
+Collect the soap action URI from the request, with C<undef> on failure.
+Officially, the "SOAPAction" has no other purpose than the ability to
+route messages over HTTP: it should not be linked to the portname of
+the message (although it often can).
+
+=item B<lwp_add_header>(FIELD, CONTENT, ...)
+
+=item B<lwp_handle_connection>(CONNECTION, OPTIONS)
+
+=item B<lwp_make_response>(REQUEST, RC, MSG, BODY)
+
+=item B<lwp_run_request>(REQUEST, HANDLER, [CONNECTION])
+
+Handle one REQUEST (HTTP::Request object), which was received from
+the CLIENT (string).  When the request has been received, the HANDLER
+is called. With that result, a response message is composed.
+
+=item B<lwp_wsdl_response>([WSDLFILE|RESPONSE])
+
+Set the result of WSDL query responses, either to a response which
+is created internally containing WSDLFILE, or to an already complete
+RESPONSE object (HTTP::Response).  The response object is returned.
+
+=back
+
+=head1 SEE ALSO
+
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.00,
+built on April 15, 2011. Website: F<http://perl.overmeer.net/xml-compile/>
+
+Other distributions in this suite:
+L<XML::Compile>,
+L<XML::Compile::SOAP>,
+L<XML::Compile::SOAP12>,
+L<XML::Compile::SOAP::Daemon>,
+L<XML::Compile::SOAP::WSA>,
+L<XML::Compile::SOAP::WSS>,
+L<XML::Compile::Tester>,
+L<XML::Compile::Cache>,
+L<XML::Compile::Dumper>,
+L<XML::Compile::RPC>,
+L<XML::Rewrite>,
+L<XML::eXistDB>,
+and
+L<XML::LibXML::Simple>.
+
+Please post questions or ideas to the mailinglist at
+F<http://lists.scsys.co.uk/cgi-bin/mailman/listinfo/xml-compile>
+For live contact with other developers, visit the C<#xml-compile> channel
+on C<irc.perl.org>.
+
+=head1 LICENSE
+
+Copyrights 2007-2011 by Mark Overmeer. For other contributors see ChangeLog.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+See F<http://www.perl.com/perl/misc/Artistic.html>
+

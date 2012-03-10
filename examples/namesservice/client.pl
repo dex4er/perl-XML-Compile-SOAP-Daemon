@@ -78,6 +78,7 @@ GetOptions
    'v+'        => \$mode  # -v -vv -vvv
  , 'verbose=i' => \$mode  # --verbose=2  (0..3)
  , 'mode=s'    => \$mode  # --mode=DEBUG (DEBUG,ASSERT,VERBOSE,NORMAL)
+ , 'server=s'  => \$service_address
    or die "stopped\n";
 
 die "No filenames expected on the command-line"
@@ -127,7 +128,8 @@ while(lc $answer ne 'q')
       3) getNamesInCountry
       4) getNameCount, not defined by WSDL
       5) tryStub, in WSDL but not implemented
-      Q) quit demo
+      6) request WSDL file
+      q) quit demo
 __SELECTOR
 
     print <<__HELP unless $mode;
@@ -135,7 +137,7 @@ __SELECTOR
 __HELP
     print "\n";
 
-    $answer = $term->readline("Pick one of above [1-5,Q] ");
+    $answer = $term->readline("Pick one of above [1-6,q] ");
     chomp $answer;
 
        if($answer eq '1') { get_countries() }
@@ -143,6 +145,7 @@ __HELP
     elsif($answer eq '3') { get_names_in_country() }
     elsif($answer eq '4') { get_name_count() }
     elsif($answer eq '5') { try_stub() }
+    elsif($answer eq '6') { get_wsdl() }
     elsif(lc $answer ne 'q' && length $answer)
     {   print "Illegal choice\n";
     }
@@ -374,3 +377,20 @@ sub try_stub()
 
 }
 
+#
+# get_wsdl
+# Many SOAP servers publish a WSDL. This is not provided by the
+# SOAP interface, but an HTTP server "trick".
+#
+
+sub get_wsdl()
+{   use LWP::UserAgent;
+    my $ua   = LWP::UserAgent->new;
+    my $resp = $ua->get("$service_address?WSDL");
+    if($resp)
+    {    print "received ".$resp->as_string;
+    }
+    else
+    {   print "no WSDL file published\n";
+    }
+}

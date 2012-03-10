@@ -1,6 +1,20 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 3.00: Fri Apr 15 11:22:41 CEST 2011
+
+	Changes:
+
+	- major reorganisation. ::HTTPDaemon split into ::Daemon::LWPutil
+	  and ::Daemon::NetServer.
+
+	Improvements:
+
+	- added ::Daemon::CGI, rewrite from contribution by [Patrick Powell]
+
+	- add setWsdlResponse() to answer ?WSDL "GET" requests.
+	  Feature request by [Mark Wood-Patrick]
+
 version 2.06: Wed Dec 22 16:42:04 CET 2010
 
 	Fixes:

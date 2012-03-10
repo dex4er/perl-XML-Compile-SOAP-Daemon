@@ -2,7 +2,7 @@ use ExtUtils::MakeMaker;
 
 use 5.008;
 
-my $version = '2.06';
+my $version = '3.00';
 
 my %prereq =
   ( XML::Compile         => 1.20
@@ -11,11 +11,13 @@ my %prereq =
   , XML::Compile::Cache  => 0.98
 
   , Log::Report     => 0.90
-  , LWP             => 5.803
   , Time::HiRes     => 0
-  , Net::Server     => 0.97
   , Test::More      => 0.54
-  , Test::Deep      => 0.095
+
+# Only needed when ::Daemon::NetServer is being used
+# , Net::Server     => 0.97
+# , LWP             => 5.803
+
   );
 
 # only update WSA if installed
@@ -45,7 +47,7 @@ LICENSE         = artistic
 SKIP_LINKS	= XML::LibXML
 
 # for POD
-EXTENDS		= ../XMLCompile:../XMLSOAP:../XMLTester
+EXTENDS		= ../XMLCompile:../XMLSOAP:../XMLTester:../XMLCache
 FIRST_YEAR      = 2007
 EMAIL           = perl@overmeer.net
 WEBSITE         = http://perl.overmeer.net/xml-compile/
