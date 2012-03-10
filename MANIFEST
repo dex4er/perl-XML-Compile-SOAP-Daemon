@@ -1,0 +1,21 @@
+ChangeLog
+MANIFEST
+Makefile.PL
+README
+TODO
+examples/namesservice/MyExampleCalls.pm
+examples/namesservice/MyExampleData.pm
+examples/namesservice/README
+examples/namesservice/client.pl
+examples/namesservice/namesservice.wsdl
+examples/namesservice/namesservice.xsd
+examples/namesservice/server.pl
+examples/namesservice/servtempl.pl
+lib/XML/Compile/SOAP/Daemon.pm
+lib/XML/Compile/SOAP/Daemon.pod
+lib/XML/Compile/SOAP/HTTPDaemon.pm
+lib/XML/Compile/SOAP/HTTPDaemon.pod
+t/01use.t
+t/99pod.t
+t/TestTools.pm
+META.yml                                 Module meta-data (added by MakeMaker)

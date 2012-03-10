@@ -1,0 +1,358 @@
+=head1 NAME
+
+XML::Compile::SOAP::Daemon - base class for SOAP message servers
+
+=head1 INHERITANCE
+
+ XML::Compile::SOAP::Daemon is extended by
+   XML::Compile::SOAP::HTTPDaemon
+
+=head1 SYNOPSIS
+
+ #### have a look in the examples directory!
+
+ # Be warned that the daemon will be Net::Server based, which consumes
+ # command-line arguments!
+ my $deamon  = XML::Compile::SOAP::HTTPDaemon->new;
+
+ # daemon definitions from WSDL
+ my $wsdl    = XML::Compile::WSDL11->new(...);
+ $wsdl->importDefinitions(...); # more schemas
+ $deamon->operationsFromWSDL($wsdl, handlers => ...);
+
+ # daemon definitions added manually
+ my $soap11  = XML::Compile::SOAP11::Server->new(schemas => $wsdl->schemas);
+ my $handler = $soap11->compileHandler(...);
+ $deamon->addHandler('getInfo', $soap11, $handler);
+
+ # see what is defined:
+ $daemon->printIndex;
+
+ # finally, run the server.  This never returns.
+ $daemon->run(...daemon options...);
+
+=head1 DESCRIPTION
+
+This base class implements the common needs between various types of
+SOAP daemons.  As daemon type, you can use any kind of Net::Server
+implementation.
+
+The following extensions are implemented on the moment: (other are not
+yet planned to get implemented)
+
+=over 4
+
+=item .
+
+L<XML::Compile::SOAP::HTTPDaemon|XML::Compile::SOAP::HTTPDaemon>, for transport over HTTP.
+
+=back
+
+The deamon can handle various kinds of SOAP protocols at the same time,
+when possible hidden from the user of this module.
+
+If you have a WSDL describing your procedures, then the only thing you
+have to worry about is adding callbacks for each of the defined ports.
+Without WSDL, you will need to do more manually, but it is still
+relatively simple to achieve.
+
+Do not forget to take a look at the extensive example, enclosed in the
+L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon> distribution package.  It is really worth
+the time.
+
+=head1 METHODS
+
+=head2 Constructors
+
+XML::Compile::SOAP::Daemon-E<gt>B<new>(OPTIONS)
+
+=over 4
+
+Create the server handler, which extends some class which implements
+a Net::Server.
+
+Any daemon configuration parameter should be passed with L<run()|XML::Compile::SOAP::Daemon/"Running the server">.  This
+is a little tricky.  Read below in the L</Configuration options> section.
+
+ Option        --Default
+ based_on        <internal Net::Server::PreFork>
+ output_charset  'UTF-8'
+ support_soap    'ANY'
+
+. based_on => Net::Server OBJECT|CLASS
+
+=over 4
+
+You may pass your own Net::Server compatible daemon, if you feel a need
+to initialize it or prefer an other one.  Preferrably, pass configuration
+settings to L<run()|XML::Compile::SOAP::Daemon/"Running the server">.  You may also specify any Net::Server compatible
+CLASS name.
+
+=back
+
+. output_charset => STRING
+
+=over 4
+
+The character-set to be used for the output XML document.
+
+=back
+
+. support_soap => 'SOAP11'|'SOAP12'|'ANY'|SOAP
+
+=over 4
+
+Which versions of SOAP to support.  Quite an amount of preparations
+must be made to start a server, which can be reduced by enforcing
+a single SOAP type, specified as version string or L<XML::Compile::SOAP|XML::Compile::SOAP>
+object.
+
+=back
+
+=back
+
+=head2 Attributes
+
+$obj-E<gt>B<isSupportedVersion>(('SOAP11'|'SOAP12'))
+
+=over 4
+
+Returns true if the soap version is supported, according to
+L<new(support_soap)|XML::Compile::SOAP::Daemon/"Constructors">).
+
+=back
+
+$obj-E<gt>B<outputCharset>
+
+=over 4
+
+The character-set to be used for output documents.
+
+=back
+
+=head2 Running the server
+
+$obj-E<gt>B<process>(CLIENT, XMLIN)
+
+=over 4
+
+The parsed XMLIN SOAP-structured message (an XML::LibXML::Element or
+XML::LibXML::Document), was received from the CLIENT (some extension
+specific object).  Returned is an XML document as answer.
+
+=back
+
+$obj-E<gt>B<run>(OPTIONS)
+
+=over 4
+
+See Net::Server subroutine run, but the OPTIONS are passed as list, not
+as HASH.
+
+=back
+
+=head2 Preparations
+
+$obj-E<gt>B<addHandler>(NAME, SOAP, CODE)
+
+=over 4
+
+The SOAP value is C<SOAP11>, C<SOAP12>, or a SOAP server object.  The CODE
+reference is called with the incoming document (an XML::LibXML::Document)
+of the received input message.
+
+In case the handler does not understand the message, it should
+return undef.  Otherwise, it must return a correct answer message as
+XML::LibXML::Document.
+
+=back
+
+$obj-E<gt>B<operationsFromWSDL>(WSDL, OPTIONS)
+
+=over 4
+
+Compile the operations found in the WSDL object (an
+L<XML::Compile::WSDL11|XML::Compile::WSDL11>).  You can add the operations from many different
+WSDLs into one server, simply by calling this method repeatedly.
+
+ Option          --Default
+ callbacks         {}
+ default_callback  <produces fault reply>
+
+. callbacks => HASH
+
+=over 4
+
+The keys are the port names, as defined in the WSDL.  The values are
+CODE references which are called in case a message is received which
+seems to be addressing the port (this is a guess). See L</Operation handlers>
+
+=back
+
+. default_callback => CODE
+
+=over 4
+
+When a message arrives which has no explicit handler attached to it,
+this handler will be called.  By default, an "not implemented" fault will
+be returned.  See L</Operation handlers>
+
+=back
+
+=back
+
+=head2 Helpers
+
+$obj-E<gt>B<acceptResponse>(REQUEST, XML)
+
+=over 4
+
+Returns an implementation dependent wrapper around a produced response.
+
+=back
+
+$obj-E<gt>B<faultMessageNotRecognized>(SOAPVERSION, BODYELEMENT, DEFINED)
+
+=over 4
+
+The SOAP VERSION, the type of the first BODY ELEMENT, and the ARRAY of
+DEFINED message names.
+
+=back
+
+$obj-E<gt>B<faultNotImplemented>(NAME, XML, INFO)
+
+=over 4
+
+Called as any handler, with the procedure NAME (probably the portType
+from the WSDL), the incoming XML message, and structural message INFO.
+
+=back
+
+$obj-E<gt>B<faultNotSoapMessage>(NODETYPE)
+
+=over 4
+
+=back
+
+$obj-E<gt>B<faultTryOtherProtocol>(SOAPVERSION, BODYELEMENT, OTHER)
+
+=over 4
+
+The SOAP VERSION, the type of the first BODY ELEMENT, and an ARRAY of OTHER
+protocols are passed.
+
+=back
+
+$obj-E<gt>B<faultUnsupportedSoapVersion>(ENV_NS)
+
+=over 4
+
+=back
+
+$obj-E<gt>B<handlers>(('SOAP11'|'SOAP12'|SOAP))
+
+=over 4
+
+Returns all the handler names for a certain soap version.
+
+example: 
+
+ foreach my $version (sort $server->soapVersions)
+ {   foreach my $action (sort $server->handlers($version))
+     {  print "$version $action\n";
+     }
+ }
+
+=back
+
+$obj-E<gt>B<inputToXML>(CLIENT, ACTION, XML-STRING-REF)
+
+=over 4
+
+Translate a textual XML message into an XML::LibXML tree.
+
+=back
+
+$obj-E<gt>B<printIndex>([FILEHANDLE])
+
+=over 4
+
+Print a table which shows the messages that the server can handle,
+by default to STDOUT.
+
+=back
+
+$obj-E<gt>B<soapFault>(SOAPVERSION, DATA, [RC, ABSTRACT])
+
+=over 4
+
+Create the fault document.  The error code (RC) is not always available,
+as is an ABSTRACT description of the problem.
+
+=back
+
+$obj-E<gt>B<soapVersions>
+
+=over 4
+
+=back
+
+=head1 DETAILS
+
+=head2 Configuration options
+
+This module will wrap any kind of Net::Server, for instance a
+Net::Server::PreFork.  It depends on the type of C<Net::Server>
+you specify (see L<new(based_on)|XML::Compile::SOAP::Daemon/"Constructors">) which conifguration options are
+available on the command-line, in a configuration file, or with L<run()|XML::Compile::SOAP::Daemon/"Running the server">.
+Each daemon extension implementation will add some configuration options
+as well.
+
+Any C<XML::Compile::SOAP::Daemon> object will have the following additional
+configuration options:
+
+  Key          Value                            Default
+  # there will be some, I am sure of it.
+
+Some general configuration options of Net::Server have a different default.
+See also the next section about logging.
+
+  Key          Value                            New default
+  setsid       boolean                          true
+  background   boolean                          true
+
+=head3 logging
+
+An attempt is made to merge XML::Compile's Log::Report and Net::Server
+log configuration.  By hijacking the C<log()> method, all Net::Server
+internal errors are dispatched over the Log::Report framework.  Log levels
+are translated into report reasons: 0=ERROR, 1=WARNING, 2=NOTICE, 3=INFO,
+4=TRACE.
+
+When you specify C<Sys::Syslog> or a filename, default dispatchers of type
+SYSLOG resp FILE are created for you.  When the C<log_file> type is set to
+C<Log::Report>, you have much more control over the process, but all log
+related configuration options will get ignored.  In that case, you must
+have initialized the dispatcher framework the way Log::Report is doing
+it: before the daemon is initiated. See Log::Report subroutine dispatcher.
+
+  Key          Value                            Default
+  log_file     filename|Sys::Syslog|Log::Report Log::Report
+  log_level    0..4 | REASON                    2 (NOTICE)
+
+=head3 Operation handlers
+
+=head1 SEE ALSO
+
+This module is part of XML-Compile-SOAP-Daemon distribution version 0.10,
+built on April 08, 2008. Website: F<http://perl.overmeer.net/xml-compile/>
+
+=head1 LICENSE
+
+Copyrights 2007-2008 by Mark Overmeer. For other contributors see ChangeLog.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+See F<http://www.perl.com/perl/misc/Artistic.html>
+
