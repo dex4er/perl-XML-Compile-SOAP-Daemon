@@ -1,0 +1,215 @@
+=head1 NAME
+
+XML::Compile::SOAP::Daemon::PSGI - PSGI based application
+
+=head1 INHERITANCE
+
+ XML::Compile::SOAP::Daemon::PSGI
+   is a XML::Compile::SOAP::Daemon
+   is a Plack::Component
+
+=head1 SYNOPSIS
+
+ #### have a look in the examples directory!
+ use XML::Compile::SOAP::Daemon::PSGI;
+ my $daemon = XML::Compile::SOAP::Daemon::PSGI->new;
+
+ # initialize definitions from WSDL
+ my $wsdl    = XML::Compile::WSDL11->new(...);
+ $wsdl->importDefinitions(...); # more schemas
+ $daemon->operationsFromWSDL($wsdl, callbacks => ...);
+
+ # generate PSGI application
+ my $app = $daemon->to_app;
+ $app;
+
+=head1 DESCRIPTION
+
+This module handles the exchange of SOAP messages via L<PSGI> stack, using
+L<Plack> toolkit.
+
+This abstraction level of the object (code in this pm file) is not
+concerned with parsing or composing XML, but only worries about the
+HTTP transport specifics of SOAP messages.
+
+=head1 METHODS
+
+=head2 Constructors
+
+=over 4
+
+=item XML::Compile::SOAP::Daemon::PSGI-E<gt>B<new>(OPTIONS)
+
+ -Option            --Defined in     --Default
+  accept_slow_select  XML::Compile::SOAP::Daemon  <true>
+  output_charset      XML::Compile::SOAP::Daemon  'UTF-8'
+  soap_action_input   XML::Compile::SOAP::Daemon  {}
+  wsa_action_input    XML::Compile::SOAP::Daemon  {}
+  wsa_action_output   XML::Compile::SOAP::Daemon  {}
+  preprocess                                      undef
+  postprocess                                     undef
+
+=over 2
+
+=item accept_slow_select => BOOLEAN
+
+=item output_charset => STRING
+
+=item soap_action_input => HASH|ARRAY
+
+=item wsa_action_input => HASH|ARRAY
+
+=item wsa_action_output => HASH|ARRAY
+
+=item preprocess => CODE
+
+When defined, the CODE will get called with a L<Plack::Request> object before
+processing SOAP message.
+
+=item postprocess => CODE
+
+When defined, the CODE will get called with a L<Plack::Request> and
+L<Plack::Response> objects after processing SOAP message.
+
+=back
+
+=back
+
+=head2 Attributes
+
+=over 4
+
+=item $obj-E<gt>B<addSoapAction>(HASH|PAIRS)
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=item $obj-E<gt>B<addWsaTable>(('INPUT'|'OUTPUT'), [HASH|PAIRS])
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=item $obj-E<gt>B<outputCharset>()
+
+See L<XML::Compile::SOAP::Daemon/"Attributes">
+
+=back
+
+=head2 Running the server
+
+=over 4
+
+=item $obj-E<gt>B<call>(ENV)
+
+Process the content of a single message. Not to be called directly.
+
+=item $obj-E<gt>B<to_app>()
+
+Converts the server into a PSGI C<$app>.
+
+=item $obj-E<gt>B<run>(OPTIONS)
+
+The same as B<to_app> but accepts additional B<preprocess> and B<postprocess> options.
+
+=back
+
+=head2 Preparations
+
+=over 4
+
+=item $obj-E<gt>B<addHandler>(NAME, SOAP, CODE)
+
+See L<XML::Compile::SOAP::Daemon/"Preparations">
+
+=item $obj-E<gt>B<operationsFromWSDL>(WSDL, OPTIONS)
+
+See L<XML::Compile::SOAP::Daemon/"Preparations">
+
+=item $obj-E<gt>B<setWsdlResponse>(FILENAME)
+
+See L<XML::Compile::SOAP::Daemon/"Preparations">
+
+=back
+
+=head2 Helpers
+
+=over 4
+
+=item $obj-E<gt>B<faultInvalidXML>(ERROR)
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<faultNotSoapMessage>(NODETYPE)
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<faultUnsupportedSoapVersion>(ENV_NS)
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<handlers>(('SOAP11'|'SOAP12'|SOAP))
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<printIndex>([FILEHANDLE])
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=item $obj-E<gt>B<soapVersions>()
+
+See L<XML::Compile::SOAP::Daemon/"Helpers">
+
+=back
+
+=head1 DETAILS
+
+=head2 Operation handlers
+
+=head2 Returning errors
+
+=head3 Returning general errors
+
+=head3 Returning private errors
+
+=head2 How to use the PSGI module
+
+The code and documentation for this module was contributed by Piotr Roszatycki
+in March 2012.
+
+Go to the F<examples/mod_perl/> directory which is included in
+the distribution of this module, L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon>.
+There you find a README describing the process.
+
+=head1 SEE ALSO
+
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.03,
+built on March 05, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
+
+Other distributions in this suite:
+L<XML::Compile>,
+L<XML::Compile::SOAP>,
+L<XML::Compile::SOAP12>,
+L<XML::Compile::SOAP::Daemon>,
+L<XML::Compile::SOAP::WSA>,
+L<XML::Compile::C14N>,
+L<XML::Compile::WSS>,
+L<XML::Compile::Tester>,
+L<XML::Compile::Cache>,
+L<XML::Compile::Dumper>,
+L<XML::Compile::RPC>,
+L<XML::Rewrite>,
+L<XML::eXistDB>,
+and
+L<XML::LibXML::Simple>.
+
+Please post questions or ideas to the mailinglist at
+F<http://lists.scsys.co.uk/cgi-bin/mailman/listinfo/xml-compile>
+For live contact with other developers, visit the C<#xml-compile> channel
+on C<irc.perl.org>.
+
+=head1 LICENSE
+
+Copyrights 2007-2012 by Mark Overmeer. For other contributors see ChangeLog.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+See F<http://www.perl.com/perl/misc/Artistic.html>
+
