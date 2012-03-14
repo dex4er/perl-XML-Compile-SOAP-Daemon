@@ -53,7 +53,7 @@ sub _init($)
 sub call($)
 {   my ($self, $env) = @_;
     my $res = eval { $self->_call($env) };
-    $@ ? [ RC_SERVER_ERROR, [Content_Type => 'text/plain'], [$@] ] : $res;
+    $@ ? [ RC_SERVER_ERROR, ['Content-Type' => 'text/plain'], [$@] ] : $res;
 }
 
 sub _call($;$)
@@ -107,8 +107,8 @@ sub _call($;$)
     }
 
     my $res = $req->new_response($rc,
-      { Warning      => "199 $msg"
-      , Content_Type => $mime
+      { 'Warning'      => "199 $msg"
+      , 'Content-Type' => $mime
       }, $bytes);
 
     if(my $pp = $self->{postprocess})
