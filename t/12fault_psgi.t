@@ -8,7 +8,6 @@ use Test::More;
 use XML::Compile::WSDL11;
 use XML::Compile::SOAP11;
 use XML::Compile::SOAP::Util ':soap11';
-use XML::Compile::SOAP::Daemon::PSGI;
 my $soapenv = SOAP11ENV;
 
 BEGIN
@@ -17,6 +16,9 @@ BEGIN
 
     plan skip_all => "Plack is needed"
         unless $has_plack;
+
+    eval "use XML::Compile::SOAP::Daemon::PSGI";
+    die $@ if $@;
 }
 
 plan tests => 11;

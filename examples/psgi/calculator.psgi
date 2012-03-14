@@ -13,11 +13,10 @@ use XML::Compile::SOAP::Daemon::PSGI;
 use XML::Compile::WSDL11;
 use XML::Compile::SOAP11;
 
-use XML::Compile::Util 'pack_type';
+use XML::Compile::Util       'pack_type';
 use XML::Compile::SOAP::Util 'SOAP11ENV';
 
-use Log::Report syntax => 'SHORT';
-
+use Log::Report;
 
 dispatcher PERL => 'default', mode => 'VERBOSE';
 
@@ -91,7 +90,6 @@ $daemon->operationsFromWSDL(
 );
 
 $daemon->setWsdlResponse($wsdl_filename);
-
 
 # Set up PSGI app finally
 $daemon->to_app;

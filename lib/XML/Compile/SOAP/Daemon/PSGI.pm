@@ -1,4 +1,4 @@
-# Copyrights 2007-2012 by Mark Overmeer.
+# Copyrights 2007-2012 by [Mark Overmeer].
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
 # Pod stripped from pm file by OODoc 2.00.
@@ -7,23 +7,21 @@ use strict;
 
 package XML::Compile::SOAP::Daemon::PSGI;
 use vars '$VERSION';
-$VERSION = '3.03';
+$VERSION = '3.04';
 
 use base 'XML::Compile::SOAP::Daemon', 'Plack::Component';
-
-our @ISA;
 
 use Log::Report 'xml-compile-soap-daemon';
 use Encode;
 use Plack::Request;
 
-# do not depend on LWP
+
 use constant
   { RC_OK                 => 200
   , RC_METHOD_NOT_ALLOWED => 405
   , RC_NOT_ACCEPTABLE     => 406
+  , RC_SERVER_ERROR       => 500
   };
-
 
 #--------------------
 
@@ -32,32 +30,31 @@ sub init($)
 {   my ($self, $args) = @_;
     $self->SUPER::init($args);
     $self->_init($args);
-    return $self;
+    $self;
 }
+
+#------------------------------
 
 sub run(@)
 {   my ($self, $args) = @_;
     $self->_init($args);
-    return $self->to_app;
+    $self->to_app;
 }
 
 sub _init($)
 {   my ($self, $args) = @_;
-    $self->{$_} = $args->{$_} foreach ( grep { defined $args->{$_} } qw(preprocess postprocess) );
-    return $self;
+    $self->{preprocess}  = $args->{preprocess};
+    $self->{postprocess} = $args->{postprocess};
+    $self;
 }
 
 
 # PSGI request handler
 sub call($)
 {   my ($self, $env) = @_;
-    my $res = eval {
-        $self->_call($env);
-    };
-    return [ 500, [ Content_Type => 'text/plain' ], [ $@ ] ] if $@;
-    return $res;
+    my $res = eval { $self->_call($env) };
+    $@ ? [ RC_SERVER_ERROR, [Content_Type => 'text/plain'], [$@] ] : $res;
 }
-
 
 sub _call($;$)
 {   my ($self, $env, $test_env) = @_;
@@ -112,20 +109,18 @@ sub _call($;$)
     my $res = $req->new_response($rc,
       { Warning      => "199 $msg"
       , Content_Type => $mime
-      }
-    , $bytes);
+      }, $bytes);
 
     if(my $pp = $self->{postprocess})
     {   $pp->($req, $res);
     }
 
     $res->content_length(length $bytes);
-    return $res->finalize;
+    $res->finalize;
 }
 
 sub setWsdlResponse($)
 {   my ($self, $fn) = @_;
-    $fn or return;
     local *WSDL;
     open WSDL, '<:raw', $fn
         or fault __x"cannot read WSDL from {file}", file => $fn;
@@ -141,13 +136,13 @@ sub sendWsdl($)
       { Warning        => '199 WSDL specification'
       , Content_Type   => 'application/wsdl+xml; charset=utf-8'
       , Content_Length => length($self->{wsdl_data})
-      }
-    , $self->{wsdl_data});
+      }, $self->{wsdl_data});
 
-    return $res->finalize;
+    $res->finalize;
 }
 
 #-----------------------------
 
-
 1;
+
+

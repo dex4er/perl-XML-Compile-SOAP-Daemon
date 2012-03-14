@@ -8,6 +8,7 @@ XML::Compile::SOAP::Daemon - SOAP accepting server (base class)
    XML::Compile::SOAP::Daemon::AnyDaemon
    XML::Compile::SOAP::Daemon::CGI
    XML::Compile::SOAP::Daemon::NetServer
+   XML::Compile::SOAP::Daemon::PSGI
 
 =head1 SYNOPSIS
 
@@ -37,24 +38,31 @@ The following extensions are implemented on the moment:
 
 =over 4
 
-=item .
+=item *
 
 L<XML::Compile::SOAP::Daemon::AnyDaemon|XML::Compile::SOAP::Daemon::AnyDaemon>, for transport over HTTP
 based on Any::Daemon (a generic pre-forked daemon) and LWP.
 It uses Log::Report as exception and loggin frame-work, just as all
 C<XML::Compile> modules do, hence cleaner integration.
 
-=item .
+=item *
+
+L<XML::Compile::SOAP::Daemon::CGI|XML::Compile::SOAP::Daemon::CGI>, for transport over HTTP
+based on CGI and LWP.
+
+=item *
+
+L<XML::Compile::SOAP::Daemon::PSGI|XML::Compile::SOAP::Daemon::PSGI> allows to run SOAP server as a
+part of larger PSGI application (mixing webservice with standard
+webserver) or to integrate with existing event loop framework (AnyEvent,
+Coro, POE).
+
+=item *
 
 L<XML::Compile::SOAP::Daemon::NetServer|XML::Compile::SOAP::Daemon::NetServer>, for transport over HTTP
 based on Net::Server and LWP.  The C<Net::Server> distribution
 offers a number of very different daemon implementations.  There are
 too many ways to configure it.
-
-=item .
-
-L<XML::Compile::SOAP::Daemon::CGI|XML::Compile::SOAP::Daemon::CGI>, for transport over HTTP
-based on CGI and LWP.
 
 =back
 
@@ -425,8 +433,8 @@ faultstring values from the fault message.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 3.03,
-built on March 05, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.04,
+built on March 14, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
 
 Other distributions in this suite:
 L<XML::Compile>,
@@ -452,7 +460,7 @@ on C<irc.perl.org>.
 
 =head1 LICENSE
 
-Copyrights 2007-2012 by Mark Overmeer. For other contributors see ChangeLog.
+Copyrights 2007-2012 by [Mark Overmeer]. For other contributors see ChangeLog.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

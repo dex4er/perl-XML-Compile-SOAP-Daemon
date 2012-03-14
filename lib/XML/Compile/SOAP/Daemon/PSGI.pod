@@ -6,6 +6,8 @@ XML::Compile::SOAP::Daemon::PSGI - PSGI based application
 
  XML::Compile::SOAP::Daemon::PSGI
    is a XML::Compile::SOAP::Daemon
+
+ XML::Compile::SOAP::Daemon::PSGI
    is a Plack::Component
 
 =head1 SYNOPSIS
@@ -25,8 +27,8 @@ XML::Compile::SOAP::Daemon::PSGI - PSGI based application
 
 =head1 DESCRIPTION
 
-This module handles the exchange of SOAP messages via L<PSGI> stack, using
-L<Plack> toolkit.
+This module handles the exchange of SOAP messages via PSGI stack,
+using Plack toolkit. This module was contributed by Piotr Roszatycki.
 
 This abstraction level of the object (code in this pm file) is not
 concerned with parsing or composing XML, but only worries about the
@@ -43,11 +45,11 @@ HTTP transport specifics of SOAP messages.
  -Option            --Defined in     --Default
   accept_slow_select  XML::Compile::SOAP::Daemon  <true>
   output_charset      XML::Compile::SOAP::Daemon  'UTF-8'
+  postprocess                          undef
+  preprocess                           undef
   soap_action_input   XML::Compile::SOAP::Daemon  {}
   wsa_action_input    XML::Compile::SOAP::Daemon  {}
   wsa_action_output   XML::Compile::SOAP::Daemon  {}
-  preprocess                                      undef
-  postprocess                                     undef
 
 =over 2
 
@@ -55,21 +57,21 @@ HTTP transport specifics of SOAP messages.
 
 =item output_charset => STRING
 
+=item postprocess => CODE
+
+When defined, the CODE will get called with a Plack::Request and
+Plack::Response objects after processing SOAP message.
+
+=item preprocess => CODE
+
+When defined, the CODE will get called with a Plack::Request object
+before processing SOAP message.
+
 =item soap_action_input => HASH|ARRAY
 
 =item wsa_action_input => HASH|ARRAY
 
 =item wsa_action_output => HASH|ARRAY
-
-=item preprocess => CODE
-
-When defined, the CODE will get called with a L<Plack::Request> object before
-processing SOAP message.
-
-=item postprocess => CODE
-
-When defined, the CODE will get called with a L<Plack::Request> and
-L<Plack::Response> objects after processing SOAP message.
 
 =back
 
@@ -101,13 +103,18 @@ See L<XML::Compile::SOAP::Daemon/"Attributes">
 
 Process the content of a single message. Not to be called directly.
 
-=item $obj-E<gt>B<to_app>()
+=item $obj-E<gt>B<process>(CLIENT, XMLIN, REQUEST, ACTION)
 
-Converts the server into a PSGI C<$app>.
+See L<XML::Compile::SOAP::Daemon/"Running the server">
 
 =item $obj-E<gt>B<run>(OPTIONS)
 
-The same as B<to_app> but accepts additional B<preprocess> and B<postprocess> options.
+The same as B<to_app> but accepts additional B<preprocess> and
+B<postprocess> options.
+
+=item $obj-E<gt>B<to_app>()
+
+Converts the server into a PSGI C<$app>.
 
 =back
 
@@ -171,17 +178,17 @@ See L<XML::Compile::SOAP::Daemon/"Helpers">
 
 =head2 How to use the PSGI module
 
-The code and documentation for this module was contributed by Piotr Roszatycki
-in March 2012.
+The code and documentation for this module was contributed by Piotr
+Roszatycki in March 2012.
 
-Go to the F<examples/mod_perl/> directory which is included in
-the distribution of this module, L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon>.
-There you find a README describing the process.
+Go to the F<examples/mod_perl/> directory which is included in the
+distribution of this module, L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon> There you
+find a README describing the process.
 
 =head1 SEE ALSO
 
-This module is part of XML-Compile-SOAP-Daemon distribution version 3.03,
-built on March 05, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
+This module is part of XML-Compile-SOAP-Daemon distribution version 3.04,
+built on March 14, 2012. Website: F<http://perl.overmeer.net/xml-compile/>
 
 Other distributions in this suite:
 L<XML::Compile>,
@@ -207,7 +214,7 @@ on C<irc.perl.org>.
 
 =head1 LICENSE
 
-Copyrights 2007-2012 by Mark Overmeer. For other contributors see ChangeLog.
+Copyrights 2007-2012 by [Mark Overmeer]. For other contributors see ChangeLog.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
