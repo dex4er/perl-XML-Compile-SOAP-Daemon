@@ -1,11 +1,11 @@
-# Copyrights 2007-2012 by Mark Overmeer.
+# Copyrights 2007-2012 by [Mark Overmeer].
 #  For other contributors see ChangeLog.
 # See the manual pages for details on the licensing terms.
 # Pod stripped from pm file by OODoc 2.00.
 
 package XML::Compile::SOAP::HTTPDaemon;
 use vars '$VERSION';
-$VERSION = '3.03';
+$VERSION = '3.04';
 
 
 use XML::Compile::SOAP::Daemon::NetServer;

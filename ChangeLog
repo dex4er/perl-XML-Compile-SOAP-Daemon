@@ -1,6 +1,13 @@
 
 === version history of XML::Compile::SOAP::Daemon
 
+version 3.04: Wed Mar 14 00:11:11 CET 2012
+
+	Improvement:
+
+	- new back-end XML::Compile::SOAP::Daemon::PSGI, contributed
+	  by [Piotr Roszatycki].
+
 version 3.03: Mon Mar  5 11:21:30 CET 2012
 
 	Fixes:

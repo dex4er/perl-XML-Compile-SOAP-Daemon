@@ -1,33 +1,34 @@
 =head1 NAME
 
-XML::Compile::SOAP::Daemon::CGI - CGI based server
+XML::Compile::SOAP::Daemon::PSGI - PSGI based application
 
 =head1 INHERITANCE
 
- XML::Compile::SOAP::Daemon::CGI
+ XML::Compile::SOAP::Daemon::PSGI
    is a XML::Compile::SOAP::Daemon
+
+ XML::Compile::SOAP::Daemon::PSGI
+   is a Plack::Component
 
 =head1 SYNOPSIS
 
  #### have a look in the examples directory!
- use XML::Compile::SOAP::Daemon::CGI;
- my $daemon = XML::Compile::SOAP::Daemon::CGI->new;
+ use XML::Compile::SOAP::Daemon::PSGI;
+ my $daemon = XML::Compile::SOAP::Daemon::PSGI->new;
 
  # initialize definitions from WSDL
  my $wsdl    = XML::Compile::WSDL11->new(...);
  $wsdl->importDefinitions(...); # more schemas
  $daemon->operationsFromWSDL($wsdl, callbacks => ...);
 
- # per connected client
- my $query = CGI->new;
- $daemon->runCgiRequest(query => $query);
+ # generate PSGI application
+ my $app = $daemon->to_app;
+ $app;
 
 =head1 DESCRIPTION
 
-This module handles the exchange of SOAP messages via Apache, using
-mod_perl and the popular Perl module CGI.  Have a look at the
-F<examples/> directory, contained in the C<XML-Compile-SOAP-Daemon>
-distribution.
+This module handles the exchange of SOAP messages via PSGI stack,
+using Plack toolkit. This module was contributed by Piotr Roszatycki.
 
 This abstraction level of the object (code in this pm file) is not
 concerned with parsing or composing XML, but only worries about the
@@ -39,11 +40,13 @@ HTTP transport specifics of SOAP messages.
 
 =over 4
 
-=item XML::Compile::SOAP::Daemon::CGI-E<gt>B<new>(OPTIONS)
+=item XML::Compile::SOAP::Daemon::PSGI-E<gt>B<new>(OPTIONS)
 
  -Option            --Defined in     --Default
   accept_slow_select  XML::Compile::SOAP::Daemon  <true>
   output_charset      XML::Compile::SOAP::Daemon  'UTF-8'
+  postprocess                          undef
+  preprocess                           undef
   soap_action_input   XML::Compile::SOAP::Daemon  {}
   wsa_action_input    XML::Compile::SOAP::Daemon  {}
   wsa_action_output   XML::Compile::SOAP::Daemon  {}
@@ -53,6 +56,16 @@ HTTP transport specifics of SOAP messages.
 =item accept_slow_select => BOOLEAN
 
 =item output_charset => STRING
+
+=item postprocess => CODE
+
+When defined, the CODE will get called with a Plack::Request and
+Plack::Response objects after processing SOAP message.
+
+=item preprocess => CODE
+
+When defined, the CODE will get called with a Plack::Request object
+before processing SOAP message.
 
 =item soap_action_input => HASH|ARRAY
 
@@ -86,37 +99,22 @@ See L<XML::Compile::SOAP::Daemon/"Attributes">
 
 =over 4
 
-=item $obj-E<gt>B<process>(OPTIONS)
+=item $obj-E<gt>B<call>(ENV)
 
 Process the content of a single message. Not to be called directly.
 
+=item $obj-E<gt>B<process>(CLIENT, XMLIN, REQUEST, ACTION)
+
+See L<XML::Compile::SOAP::Daemon/"Running the server">
+
 =item $obj-E<gt>B<run>(OPTIONS)
 
-Used by L<runCgiRequest()|XML::Compile::SOAP::Daemon::CGI/"Running the server"> to process a connection. Not to be called
-directly.
+The same as B<to_app> but accepts additional B<preprocess> and
+B<postprocess> options.
 
-=item $obj-E<gt>B<runCgiRequest>(OPTIONS)
+=item $obj-E<gt>B<to_app>()
 
- -Option     --Default
-  postprocess  undef
-  query        <created internally>
-
-=over 2
-
-=item postprocess => CODE
-
-When defined, the CODE will get called with a HASH (containing OPTIONS
-and other compile information), a HASH of headers (which you may change),
-the HTTP return code, and a reference to the message body (which may be
-changed as well).
-
-Be warned that the message body must be considered as bytes, so not
-as Latin1 or utf-8 string.  You may wish to add or remove bytes. The
-Content-Length will be added to the headers after the call.
-
-=item query => <CGI object>
-
-=back
+Converts the server into a PSGI C<$app>.
 
 =back
 
@@ -178,14 +176,14 @@ See L<XML::Compile::SOAP::Daemon/"Helpers">
 
 =head3 Returning private errors
 
-=head2 How to use the CGI module
+=head2 How to use the PSGI module
 
-The code and documentation for this module was contributed by Patrick
-Powell in December 2010. Both have seen major changes since.
+The code and documentation for this module was contributed by Piotr
+Roszatycki in March 2012.
 
-Go to the F<examples/mod_perl/> directory which is included in
-the distribution of this module, L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon>.
-There you find a README describing the process.
+Go to the F<examples/mod_perl/> directory which is included in the
+distribution of this module, L<XML::Compile::SOAP::Daemon|XML::Compile::SOAP::Daemon> There you
+find a README describing the process.
 
 =head1 SEE ALSO
 
