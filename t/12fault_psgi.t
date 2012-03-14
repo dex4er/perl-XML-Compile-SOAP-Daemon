@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Attempt to produce all errors for CGI backend
+# Attempt to produce all errors for PSGI backend
 
 use warnings;
 use strict;
@@ -21,7 +21,7 @@ BEGIN
     die $@ if $@;
 }
 
-plan tests => 11;
+plan tests => 14;
 
 require_ok('Plack::Test');
 require_ok('HTTP::Request');
@@ -68,7 +68,7 @@ sub send_request($)
     Plack::Test::test_psgi($app, sub {
         my $cb = shift;
         my $res = $cb->($req);
-        my $msg = $res->headers->header('Warning');
+        my $msg = $res->headers->header('Warning') || '<empty>';
         $msg =~ s/^199 //;
         $answer = join "\n",
             $res->code,
@@ -195,4 +195,32 @@ text/xml
     </SOAP-ENV:Fault>
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
+__EXPECTED
+
+my $daemon2 = XML::Compile::SOAP::Daemon::PSGI->new;
+isa_ok($daemon2, 'XML::Compile::SOAP::Daemon::PSGI');
+
+$app = $daemon2->run({preprocess => sub { die "BOOM\n" }});
+isa_ok($app, 'CODE');
+
+### Internal error
+
+my $ans8 = send_request <<__REQ8;
+POST /a HTTP/1.0
+Content-Type: text/xml
+soapAction: ''
+
+<me:Envelope xmlns:me="$soapenv">
+  <me:Body>
+    <me:something />
+  </me:Body>
+</me:Envelope>
+__REQ8
+
+compare_answer($ans8, <<__EXPECTED, 'internal error');
+500
+<empty>
+text/plain
+
+BOOM
 __EXPECTED
